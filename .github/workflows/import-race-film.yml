@@ -1,0 +1,47 @@
+name: Import final cinematic race film
+on:
+  push:
+    paths:
+      - '.github/workflows/import-race-film.yml'
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download final race film
+        env:
+          MEDIA_URL_B64: "aHR0cHM6Ly9kbnpucnZzMDVwbXphLmNsb3VkZnJvbnQubmV0L2tsaW5nLTMtMC1wcm8vY2I3YWU2Y2EtZTc1Mi00OWQ2LWIwNWItZGJkNzE3MGVjYmUwL0VpZ2h0X3Rob3JvdWdoYnJlZHNfZ2FsbG9wX2FicmVhc3RfYWxvbmdfdGhlX2JhY2tzdHJldGNoX29mX2FfbW9kZXJuX0phcGFuZXNlX3R1cmZfcmFjZWNvdXJzZV9fRnJvbV8ubXA0P19qd3Q9ZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SnJaWGxJWVhOb0lqb2lNVGhtTURJME56TTBOMlEwTlRWbU1DSXNJbUoxWTJ0bGRDSTZJbkoxYm5kaGVTMTBZWE5yTFdGeWRHbG1ZV04wY3lJc0luTjBZV2RsSWpvaWNISnZaQ0lzSW1WNGNDSTZNVGM1TWpJek56VTFOWDAuTXowMVMyTXBxSVlLcFhtdFFwNVo4aHRES05zNzgxYUxvWkgxemI1N3RXWQ=="
+        run: |
+          set -euo pipefail
+          mkdir -p public
+          MEDIA_URL="$(printf '%s' "$MEDIA_URL_B64" | base64 --decode)"
+          curl --fail --location --retry 3 --retry-delay 2 "$MEDIA_URL" -o public/race-film.mp4
+          test -s public/race-film.mp4
+          size=$(wc -c < public/race-film.mp4)
+          if [ "$size" -lt 1000000 ]; then
+            echo "Downloaded file is unexpectedly small: $size bytes" >&2
+            exit 1
+          fi
+      - name: Point the game to the local film
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('public/index.html')
+          s = p.read_text()
+          old = "const CINEMATIC_URL='';"
+          new = "const CINEMATIC_URL='/race-film.mp4';"
+          if old not in s and new not in s:
+              raise SystemExit('CINEMATIC_URL setting not found')
+          s = s.replace(old, new)
+          p.write_text(s)
+          PY
+      - name: Commit film and game update
+        run: |
+          git config user.name "wedding-derby-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git config http.postBuffer 157286400
+          git add public/race-film.mp4 public/index.html
+          git commit -m "Embed final cinematic race film in the game" || exit 0
+          git push
