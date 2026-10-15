@@ -1,173 +1,34 @@
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const path = require('path');
-
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { transports: ['websocket','polling'] });
-const PORT = process.env.PORT || 10000;
-
-app.use(express.static(path.join(__dirname, 'public')));
-app.get('/health', (_, res) => res.json({ ok: true, rooms: rooms.size }));
-
-const rooms = new Map();
-const ALPH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
-function code() {
-  let c;
-  do { c = Array.from({length:5},()=>ALPH[Math.floor(Math.random()*ALPH.length)]).join(''); }
-  while (rooms.has(c));
-  return c;
-}
-function makeHorse(i) {
-  const number=i+1;
-  const female=[2,5,8].includes(number);
-  const bride=number===8;
-  return { slot:i, name:bride?'新婦':`ゲスト${number}`, female, bride, token:null, socketId:null, ready:false, progress:0, stamina:100, finish:null, tapQueue:0, lastTapAt:0, speed:0, effort:0, taps:0 };
-}
-function publicRoom(r) {
-  return {
-    code:r.code, count:r.count, status:r.status, startAt:r.startAt, elapsed:r.elapsed,
-    finishOrder:r.finishOrder.slice(), hostConnected:!!r.hostId,
-    horses:r.horses.map(h=>({
-      slot:h.slot,name:h.name,ready:h.ready,connected:!!h.socketId,
-      progress:+h.progress.toFixed(3),stamina:+h.stamina.toFixed(1),speed:+h.speed.toFixed(2),taps:h.taps,finish:h.finish,female:!!h.female,bride:!!h.bride
-    }))
-  };
-}
-function emitRoom(r) { io.to(r.code).emit('state', publicRoom(r)); r.updatedAt=Date.now(); }
-function normalizeName(name, fallback) {
-  const x=String(name||'').trim().slice(0,14);
-  return x || fallback;
-}
-function resetRace(r) {
-  r.status='lobby'; r.startAt=null; r.elapsed=0; r.finishOrder=[];
-  for (const h of r.horses) { h.progress=0; h.stamina=100; h.finish=null; h.tapQueue=0; h.speed=0; h.effort=0; h.taps=0; h.lastTapAt=0; }
-}
-function setCount(r,n) {
-  n=[6,8,9].includes(+n)?+n:8;
-  if (r.status==='running') return;
-  const old=r.horses;
-  r.count=n;
-  r.horses=Array.from({length:n},(_,i)=>old[i]||makeHorse(i));
-  resetRace(r);
-}
-io.on('connection', socket => {
-  socket.on('createRoom', ({count=8,names=[]}={}, cb=()=>{}) => {
-    const c=code();
-    const r={code:c,count:8,status:'lobby',startAt:null,elapsed:0,finishOrder:[],hostId:socket.id,createdAt:Date.now(),updatedAt:Date.now(),horses:[]};
-    r.horses=Array.from({length:8},(_,i)=>makeHorse(i));
-    setCount(r,count);
-    names.forEach((n,i)=>{ if(r.horses[i]) r.horses[i].name=normalizeName(n,`ゲスト${i+1}`); });
-    rooms.set(c,r); socket.join(c); socket.data={room:c,role:'host'};
-    cb({ok:true,room:publicRoom(r)}); emitRoom(r);
-  });
-
-  socket.on('hostJoin', ({code:c}={},cb=()=>{}) => {
-    c=String(c||'').toUpperCase(); const r=rooms.get(c);
-    if(!r) return cb({ok:false,error:'ROOM_NOT_FOUND'});
-    r.hostId=socket.id; socket.join(c); socket.data={room:c,role:'host'};
-    cb({ok:true,room:publicRoom(r)}); emitRoom(r);
-  });
-
-  socket.on('joinRoom', ({code:c,name,token,slot}={},cb=()=>{}) => {
-    c=String(c||'').toUpperCase(); const r=rooms.get(c);
-    if(!r) return cb({ok:false,error:'ROOM_NOT_FOUND'});
-    let h = token ? r.horses.find(x=>x.token===token) : null;
-    if(!h && Number.isInteger(slot) && slot>=0 && slot<r.count){if(r.horses[slot].token)return cb({ok:false,error:'SLOT_TAKEN'});h=r.horses[slot];}
-    if(!h) h=r.horses.find(x=>!x.token);
-    if(!h) return cb({ok:false,error:'ROOM_FULL'});
-    if(!h.token) h.token = Math.random().toString(36).slice(2)+Date.now().toString(36);
-    h.socketId=socket.id; h.name=normalizeName(name,h.name);
-    socket.join(c); socket.data={room:c,role:'player',slot:h.slot,token:h.token};
-    cb({ok:true,slot:h.slot,token:h.token,room:publicRoom(r)}); emitRoom(r);
-  });
-
-  socket.on('screenJoin', ({code:c}={},cb=()=>{}) => {
-    c=String(c||'').toUpperCase(); const r=rooms.get(c);
-    if(!r) return cb({ok:false,error:'ROOM_NOT_FOUND'});
-    socket.join(c); socket.data={room:c,role:'screen'}; cb({ok:true,room:publicRoom(r)});
-  });
-
-  socket.on('ready', ({ready=true}={}) => {
-    const d=socket.data||{}, r=rooms.get(d.room); if(!r||d.role!=='player') return;
-    const h=r.horses[d.slot]; if(!h||h.token!==d.token) return; h.ready=!!ready; emitRoom(r);
-  });
-
-  socket.on('renameSelf', ({name}={}) => {
-    const d=socket.data||{}, r=rooms.get(d.room); if(!r||d.role!=='player'||r.status==='running') return;
-    const h=r.horses[d.slot]; if(!h||h.token!==d.token) return; h.name=normalizeName(name,h.name); emitRoom(r);
-  });
-
-  socket.on('hostConfig', ({count,names}={}) => {
-    const d=socket.data||{}, r=rooms.get(d.room); if(!r||d.role!=='host'||r.hostId!==socket.id||r.status==='running') return;
-    if(count) setCount(r,count);
-    if(Array.isArray(names)) names.forEach((n,i)=>{ if(r.horses[i]) r.horses[i].name=normalizeName(n,r.horses[i].name); });
-    emitRoom(r);
-  });
-
-  socket.on('startRace', () => {
-    const d=socket.data||{}, r=rooms.get(d.room); if(!r||d.role!=='host'||r.hostId!==socket.id||r.status==='running') return;
-    resetRace(r); r.status='countdown'; r.startAt=Date.now()+3500; emitRoom(r);
-    setTimeout(()=>{ const rr=rooms.get(r.code); if(rr&&rr.status==='countdown'){rr.status='running';emitRoom(rr);} },3500);
-  });
-
-  socket.on('resetRace', () => {
-    const d=socket.data||{}, r=rooms.get(d.room); if(!r||d.role!=='host'||r.hostId!==socket.id) return;
-    resetRace(r); emitRoom(r);
-  });
-
-  socket.on('tapBatch', ({count=1}={}) => {
-    const d=socket.data||{}, r=rooms.get(d.room); if(!r||d.role!=='player'||r.status!=='running') return;
-    const h=r.horses[d.slot]; if(!h||h.token!==d.token||h.socketId!==socket.id||h.finish!=null) return;
-    const now=Date.now(); const safe=Math.max(0,Math.min(12,Math.floor(+count||0)));
-    if(now-h.lastTapAt<35 && safe>4) return;
-    h.lastTapAt=now; h.tapQueue=Math.min(12,h.tapQueue+safe);
-  });
-
-  socket.on('disconnect', () => {
-    const d=socket.data||{}, r=rooms.get(d.room); if(!r) return;
-    if(d.role==='host' && r.hostId===socket.id) r.hostId=null;
-    if(d.role==='player') { const h=r.horses[d.slot]; if(h&&h.socketId===socket.id) h.socketId=null; }
-    emitRoom(r);
-  });
+const express=require('express');
+const http=require('http');
+const crypto=require('crypto');
+const {Server}=require('socket.io');
+const {makeHorse,resetRace,stepRace}=require('./race-engine');
+const app=express(),server=http.createServer(app),io=new Server(server,{transports:['websocket','polling'],maxHttpBufferSize:16384});
+const rooms=new Map(),PORT=process.env.PORT||10000,VERSION='photo-stride-1';
+app.use(express.static(require('path').join(__dirname,'public'),{setHeaders(res,p){if(p.endsWith('.html')||p.endsWith('.js'))res.setHeader('Cache-Control','no-cache')}}));
+app.get('/health',(_,res)=>res.json({ok:true,version:VERSION,rooms:rooms.size}));
+function roomCode(){let c;do{c=crypto.randomBytes(3).toString('hex').slice(0,5).toUpperCase()}while(rooms.has(c));return c}
+const token=()=>crypto.randomBytes(24).toString('hex');
+const name=(n,f)=>String(n||'').trim().slice(0,14)||f;
+function state(r){return{code:r.code,count:8,status:r.status,startAt:r.startAt,elapsed:r.elapsed,tick:r.tick,serverNow:Date.now(),practice:r.practice,finishOrder:[...r.finishOrder],hostConnected:!!r.hostId,horses:r.horses.map(h=>({slot:h.slot,name:h.name,female:h.female,bride:h.bride,connected:!!h.socketId,claimed:!!h.token,ready:h.ready,active:h.active,progress:h.progress,stamina:h.stamina,speed:h.speed,effort:h.effort,acceptedTaps:h.acceptedTaps,lastInputTick:h.lastInputTick,finish:h.finish,conserve:h.conserve}))}}
+function emit(r){io.to(r.code).emit('state',state(r));r.updatedAt=Date.now()}
+function leave(socket){const d=socket.data||{},r=rooms.get(d.room);if(!r)return;socket.leave(r.code);if(d.role==='host'&&r.hostId===socket.id)r.hostId=null;if(d.role==='player'){const h=r.horses[d.slot];if(h?.socketId===socket.id)h.socketId=null}socket.data={};emit(r)}
+function host(socket){const r=rooms.get(socket.data?.room);return r&&socket.data.role==='host'&&r.hostId===socket.id?r:null}
+function input(h,r,count){if(!h||!h.active||h.finish!=null)return;const n=Math.min(3,Math.max(0,Math.floor(Number(count)||0)));h.tapQueue=Math.min(3,h.tapQueue+n);h.conserve=false;h.lastInputTick=r.tick}
+io.on('connection',socket=>{
+ socket.on('createRoom',({practice=false}={},cb=()=>{})=>{leave(socket);const r={code:roomCode(),practice:!!practice,hostId:socket.id,hostToken:token(),createdAt:Date.now(),updatedAt:Date.now(),horses:Array.from({length:8},(_,i)=>makeHorse(i))};resetRace(r);rooms.set(r.code,r);socket.join(r.code);socket.data={room:r.code,role:'host'};cb({ok:true,hostToken:r.hostToken,room:state(r)});emit(r)});
+ socket.on('hostJoin',({code,hostToken}={},cb=()=>{})=>{const r=rooms.get(String(code||'').toUpperCase());if(!r)return cb({ok:false,error:'ROOM_NOT_FOUND'});if(hostToken!==r.hostToken)return cb({ok:false,error:'HOST_AUTH'});leave(socket);r.hostId=socket.id;socket.join(r.code);socket.data={room:r.code,role:'host'};cb({ok:true,room:state(r)});emit(r)});
+ socket.on('screenJoin',({code}={},cb=()=>{})=>{const r=rooms.get(String(code||'').toUpperCase());if(!r)return cb({ok:false,error:'ROOM_NOT_FOUND'});leave(socket);socket.join(r.code);socket.data={room:r.code,role:'screen'};cb({ok:true,room:state(r)})});
+ socket.on('joinRoom',({code,slot,name:n,token:t}={},cb=()=>{})=>{const r=rooms.get(String(code||'').toUpperCase());if(!r||r.practice)return cb({ok:false,error:'ROOM_NOT_FOUND'});let h=t?r.horses.find(h=>h.token===t):null;if(!h){if(r.status!=='lobby')return cb({ok:false,error:'RACE_STARTED'});const i=Number(slot);if(!Number.isInteger(i)||i<0||i>7)return cb({ok:false,error:'INVALID_SLOT'});h=r.horses[i];if(h.token)return cb({ok:false,error:'SLOT_TAKEN'});h.token=token()}leave(socket);h.socketId=socket.id;h.name=name(n,h.name);socket.join(r.code);socket.data={room:r.code,role:'player',slot:h.slot,token:h.token};cb({ok:true,slot:h.slot,token:h.token,room:state(r)});emit(r)});
+ socket.on('ready',({ready=true}={})=>{const r=rooms.get(socket.data.room),h=r?.horses[socket.data.slot];if(socket.data.role==='player'&&h?.socketId===socket.id&&r.status==='lobby'){h.ready=!!ready;emit(r)}});
+ socket.on('hostConfig',({names}={})=>{const r=host(socket);if(!r||r.status!=='lobby')return;if(Array.isArray(names))names.slice(0,8).forEach((n,i)=>r.horses[i].name=name(n,r.horses[i].name));emit(r)});
+ socket.on('startRace',()=>{const r=host(socket);if(!r||['running','countdown'].includes(r.status))return;if(!r.practice&&!r.horses.some(h=>h.socketId))return;resetRace(r);r.horses.forEach(h=>h.active=r.practice||!!h.socketId);r.status='countdown';r.startAt=Date.now()+3000;emit(r)});
+ socket.on('resetRace',()=>{const r=host(socket);if(r){resetRace(r);emit(r)}});
+ socket.on('tapBatch',({count=1}={})=>{const r=rooms.get(socket.data.room);if(!r||r.status!=='running')return;const h=r.horses[socket.data.slot];if(socket.data.role==='player'&&h?.socketId===socket.id&&h.token===socket.data.token)input(h,r,count)});
+ socket.on('hostTap',()=>{const r=host(socket);if(r?.practice&&r.status==='running')input(r.horses[7],r,1)});
+ socket.on('conserve',({active=true}={})=>{const r=rooms.get(socket.data.room);if(!r||r.status!=='running')return;const h=socket.data.role==='host'&&r.practice&&r.hostId===socket.id?r.horses[7]:socket.data.role==='player'?r.horses[socket.data.slot]:null;if(h&&(h.socketId===socket.id||r.practice)){h.conserve=!!active;h.tapQueue=0;h.effort=0;emit(r)}});
+ socket.on('disconnect',()=>leave(socket));
 });
-
-// Fixed 50ms authoritative simulation; every display uses these positions.
-// No random outcomes, slot bonuses or late-race automatic acceleration.
-function stepRace(r,dt) {
-  r.elapsed+=dt;
-  const finishers=[];
-  for(const h of r.horses) {
-    if(h.finish!=null) continue;
-    const taps=Math.min(h.tapQueue,1); h.tapQueue-=taps; h.taps+=taps;
-    h.effort=Math.max(0,h.effort-dt*1.8);
-    if(taps) h.effort=Math.min(1,h.effort+.32);
-    h.stamina=Math.max(0,Math.min(100,h.stamina+dt*(h.effort>.35?-8*h.effort:5)));
-    const strength=.38+.62*Math.min(1,h.stamina/30);
-    const target=(2.3+2.6*h.effort)*strength;
-    h.speed+=(target-h.speed)*Math.min(1,dt*3);
-    const old=h.progress; h.progress=Math.min(100,old+h.speed*dt);
-    if(h.progress>=100){h.finish=r.elapsed-dt+(100-old)/h.speed;finishers.push(h);}
-  }
-  finishers.sort((a,b)=>a.finish-b.finish||a.slot-b.slot);
-  for(const h of finishers)r.finishOrder.push(h.slot);
-  if(r.horses.every(h=>h.finish!=null))r.status='finished';
-}
-
-
-setInterval(()=>{
-  for(const r of rooms.values()) {
-    if(r.status!=='running') continue;
-    stepRace(r, .05);
-    emitRoom(r);
-  }
-},50);
-
-setInterval(()=>{
-  const cut=Date.now()-1000*60*45;
-  for(const [c,r] of rooms) if(r.updatedAt<cut) rooms.delete(c);
-},60000);
-
-server.listen(PORT,'0.0.0.0',()=>console.log(`Wedding Derby listening on ${PORT}`));
+setInterval(()=>{for(const r of rooms.values()){if(r.status==='countdown'&&Date.now()>=r.startAt)r.status='running';if(r.status==='running'){stepRace(r,.05);emit(r)}}},50);
+setInterval(()=>{for(const [c,r]of rooms)if(Date.now()-r.updatedAt>45*60*1000)rooms.delete(c)},60000).unref();
+server.listen(PORT,'0.0.0.0',()=>console.log(`Wedding Derby ${VERSION} listening on ${PORT}`));
