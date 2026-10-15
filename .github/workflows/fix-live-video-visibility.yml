@@ -1,0 +1,57 @@
+name: Fix live race video visibility
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-live-video-visibility.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Put the moving film above the still poster
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('public/index.html')
+          s = p.read_text()
+
+          old_css = '.cinematic{z-index:0;background:#000}'
+          new_css = '.cinematic{z-index:1;background:#000}'
+          if old_css in s:
+              s = s.replace(old_css, new_css)
+          elif new_css not in s:
+              raise SystemExit('cinematic CSS was not found')
+
+          old_video = '<video id="raceFilm" class="cinematic hidden" muted playsinline preload="auto"></video>'
+          new_video = '<video id="raceFilm" class="cinematic hidden" muted playsinline webkit-playsinline preload="auto" poster="/race-poster.png"></video>'
+          if old_video in s:
+              s = s.replace(old_video, new_video)
+          elif new_video not in s:
+              raise SystemExit('raceFilm element was not found')
+
+          old_url = "const CINEMATIC_URL='/race-film.mp4';"
+          new_url = "const CINEMATIC_URL='/race-film.mp4?v=2';"
+          if old_url in s:
+              s = s.replace(old_url, new_url)
+          elif new_url not in s:
+              raise SystemExit('cinematic URL was not found')
+
+          old_init = "if(CINEMATIC_URL){$('raceFilm').src=CINEMATIC_URL;$('raceFilm').classList.remove('hidden');}"
+          new_init = "if(CINEMATIC_URL){const f=$('raceFilm');f.src=CINEMATIC_URL;f.muted=true;f.load();f.classList.remove('hidden');}"
+          if old_init in s:
+              s = s.replace(old_init, new_init)
+          elif new_init not in s:
+              raise SystemExit('cinematic initialization was not found')
+
+          p.write_text(s)
+          PY
+      - name: Commit the fix
+        run: |
+          git config user.name "wedding-derby-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/index.html
+          git commit -m "Show and play the live race film above the poster" || exit 0
+          git push
