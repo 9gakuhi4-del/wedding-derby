@@ -161,7 +161,7 @@ function renderHost(){
  if(!room)return;$('count').value=room.count;
  const box=$('hostNames');const active=document.activeElement;
  if(!box.children.length||box.children.length!==room.count){
-   box.innerHTML=room.horses.map((h,i)=>'<div class="nameRow"><b>'+(i+1)+'</b><input data-slot="'+i+'" value="'+escapeHtml(h.name)+'"><span id="rdy'+i+'" class="'+(h.ready?'ready':'notready')+'">'+(h.connected?(h.ready?'READY':'接続'):'空き')+'</span></div>').join('');
+   box.innerHTML=room.horses.map((h,i)=>'<div class="nameRow"><b>'+(i+1)+(i===7?' 新婦':'')+'</b><input data-slot="'+i+'" value="'+escapeHtml(h.name)+'"><span id="rdy'+i+'" class="'+(h.ready?'ready':'notready')+'">'+(h.connected?(h.ready?'READY':'接続'):'空き')+'</span></div>').join('');
    box.querySelectorAll('input').forEach(inp=>inp.onchange=()=>socket.emit('hostConfig',{names:[...box.querySelectorAll('input')].map(x=>x.value)}));
  } else {
    room.horses.forEach((h,i)=>{const e=$('rdy'+i);if(e){e.className=h.ready?'ready':'notready';e.textContent=h.connected?(h.ready?'READY':'接続'):'空き';}});
@@ -272,16 +272,46 @@ function makeCourse(){
  for(let i=0;i<35;i++){const tr=new THREE.Mesh(new THREE.ConeGeometry(1.3+Math.random(),4+Math.random()*3,8),mat(0x285b35,.95));tr.position.set(-70+Math.random()*145,2,-48-Math.random()*10);scene.add(tr)}
 }
 function resize3(){if(!renderer)return;const b=$('stage').getBoundingClientRect();renderer.setSize(b.width,b.height,false);camera.aspect=b.width/b.height;camera.updateProjectionMatrix()}
+
+function makeNumberSprite(number,bride=false){
+ const cv=document.createElement('canvas');cv.width=256;cv.height=256;const ctx=cv.getContext('2d');
+ ctx.clearRect(0,0,256,256);
+ ctx.beginPath();ctx.arc(128,128,102,0,Math.PI*2);
+ ctx.fillStyle='rgba(255,255,255,.98)';ctx.fill();
+ ctx.lineWidth=18;ctx.strokeStyle=bride?'#d5b05c':'#111';ctx.stroke();
+ ctx.fillStyle='#111';ctx.font='900 150px Arial, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(number),128,138);
+ const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;
+ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
+ sp.scale.set(1.55,1.55,1.55);sp.position.set(0,4.2,0);sp.renderOrder=999;
+ return sp;
+}
 function rebuildHorses(){
  if(!scene||!horseModel||!room)return;visuals.forEach(v=>scene.remove(v.group));visuals=[];mixers=[];
  room.horses.forEach((h,i)=>{
    const group=new THREE.Group();const model=horseModel.clone(true);
    const box0=new THREE.Box3().setFromObject(model), size=new THREE.Vector3();box0.getSize(size);const scale=2.65/Math.max(.001,size.y);model.scale.setScalar(scale);
    const box1=new THREE.Box3().setFromObject(model);model.position.y=-box1.min.y;model.rotation.y=Math.PI/2;group.add(model);
-   const clothMat=new THREE.MeshStandardMaterial({color:new THREE.Color(colors[i]),roughness:.6});const saddle=new THREE.Mesh(new THREE.BoxGeometry(1.1,.16,.82),clothMat);saddle.position.set(-.1,2.0,0);group.add(saddle);
-   const body=new THREE.Mesh(new THREE.CylinderGeometry(.22,.30,.75,10),clothMat);body.rotation.z=-.25;body.position.set(.05,2.48,0);group.add(body);
+   const isBride=!!h.bride||(i===7);
+   const isFemale=!!h.female||[1,4,7].includes(i);
+   const riderColor=isBride?0xffffff:new THREE.Color(colors[i]);
+   const clothMat=new THREE.MeshStandardMaterial({color:riderColor,roughness:.6});
+   const saddle=new THREE.Mesh(new THREE.BoxGeometry(1.1,.16,.82),new THREE.MeshStandardMaterial({color:new THREE.Color(colors[i]),roughness:.65}));saddle.position.set(-.1,2.0,0);group.add(saddle);
+   if(isBride){
+     const dressMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.72,side:THREE.DoubleSide});
+     const skirt=new THREE.Mesh(new THREE.CylinderGeometry(.34,.82,1.18,18),dressMat);skirt.position.set(-.02,2.27,0);skirt.rotation.z=-.17;group.add(skirt);
+     const bodice=new THREE.Mesh(new THREE.CylinderGeometry(.20,.29,.68,12),dressMat);bodice.position.set(.08,2.72,0);bodice.rotation.z=-.2;group.add(bodice);
+     const veilMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.72,side:THREE.DoubleSide,depthWrite:false});
+     const veil=new THREE.Mesh(new THREE.PlaneGeometry(.95,1.18),veilMat);veil.position.set(-.28,3.05,.02);veil.rotation.set(0,Math.PI/2,-.34);group.add(veil);
+   }else{
+     const body=new THREE.Mesh(new THREE.CylinderGeometry(.22,.30,.75,10),clothMat);body.rotation.z=-.25;body.position.set(.05,2.48,0);group.add(body);
+   }
    const head=new THREE.Mesh(new THREE.SphereGeometry(.19,12,8),new THREE.MeshStandardMaterial({color:0xe0ac84}));head.position.set(.22,2.91,0);group.add(head);
    const helmet=new THREE.Mesh(new THREE.SphereGeometry(.22,12,8),clothMat);helmet.scale.y=.62;helmet.position.set(.22,3.05,0);group.add(helmet);
+   if(isFemale){
+     const hairMat=new THREE.MeshStandardMaterial({color:0x231914,roughness:.9});
+     const hair=new THREE.Mesh(new THREE.SphereGeometry(.21,12,8),hairMat);hair.scale.set(1,.95,.72);hair.position.set(.10,2.94,-.10);group.add(hair);
+   }
+   group.add(makeNumberSprite(i+1,isBride));
    const ip=lanePoint(0,i);group.position.copy(ip);const it=tangentAt(0);group.rotation.y=-Math.atan2(it.z,it.x);scene.add(group);
    const mixer=new THREE.AnimationMixer(model);if(horseAnim)mixer.clipAction(horseAnim).setDuration(.72).play();mixers.push(mixer);visuals.push({group,mixer});
  });
