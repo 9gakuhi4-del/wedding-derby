@@ -189,7 +189,7 @@ async function init3D(){
  if(threeReady)return;threeReady=true;
  renderer=new THREE.WebGLRenderer({canvas:$('canvas'),antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;
  scene=new THREE.Scene();scene.background=new THREE.Color(0xa9c3d0);scene.fog=new THREE.Fog(0xa9c3d0,75,185);
- camera=new THREE.PerspectiveCamera(42,1,.1,300);clock3=new THREE.Clock();
+ camera=new THREE.PerspectiveCamera(28,1,.1,350);clock3=new THREE.Clock();
  scene.add(new THREE.HemisphereLight(0xffffff,0x315c37,2.4));const sun=new THREE.DirectionalLight(0xffffff,2.5);sun.position.set(-20,40,25);sun.castShadow=true;scene.add(sun);
  makeCourse();resize3();addEventListener('resize',resize3);
  $('commentary').textContent='3D競走馬モデルを読み込み中…';
@@ -201,15 +201,75 @@ async function init3D(){
  }catch(e){$('commentary').textContent='3D馬モデルの読み込みに失敗しました。通信を確認してください。';console.error(e)}
  animate3();
 }
+
+function centerPoint(progress){
+  const p=Math.max(0,Math.min(100,progress));
+  if(p<=34){
+    const t=p/34;
+    return new THREE.Vector3(-52 + 68*t, 0.03 + 0.25*Math.sin(t*Math.PI), 13.5);
+  }
+  if(p<=66){
+    const t=(p-34)/32;
+    const th=t*Math.PI;
+    return new THREE.Vector3(16 + 20*Math.sin(th), 0.05 + 0.18*Math.sin(th), 13.5*Math.cos(th));
+  }
+  const t=(p-66)/34;
+  return new THREE.Vector3(16 - 76*t, 0.05 + 0.45*Math.sin(t*Math.PI), -13.5);
+}
+function lanePoint(progress,lane){
+  const p=centerPoint(progress);
+  const p2=centerPoint(Math.min(100,progress+.25));
+  const tan=p2.clone().sub(p).normalize();
+  const side=new THREE.Vector3(-tan.z,0,tan.x).normalize();
+  const spread=(lane-(room?.count-1||7)/2)*1.95;
+  return p.add(side.multiplyScalar(spread));
+}
+function tangentAt(progress){
+  return centerPoint(Math.min(100,progress+.35)).sub(centerPoint(Math.max(0,progress-.35))).normalize();
+}
 function makeCourse(){
- const mat=(c,r=1)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
- const turf=new THREE.Mesh(new THREE.PlaneGeometry(235,48),mat(0x3c8149,1));turf.rotation.x=-Math.PI/2;turf.position.x=30;scene.add(turf);
- for(let x=-65;x<150;x+=12){const stripe=new THREE.Mesh(new THREE.PlaneGeometry(6,48),new THREE.MeshBasicMaterial({color:x%24?0x43894f:0x397945,transparent:true,opacity:.28}));stripe.rotation.x=-Math.PI/2;stripe.position.set(x,.01,0);scene.add(stripe)}
- const white=mat(0xf4f4f4,.6);[-18,18].forEach(z=>{const rail=new THREE.Mesh(new THREE.BoxGeometry(235,.17,.17),white);rail.position.set(30,1,z);scene.add(rail);for(let x=-65;x<145;x+=4){const p=new THREE.Mesh(new THREE.BoxGeometry(.12,1.9,.12),white);p.position.set(x,.1,z);scene.add(p)}});
- const stand=new THREE.Mesh(new THREE.BoxGeometry(120,11,14),mat(0x65747b,.92));stand.position.set(18,5.5,-36);scene.add(stand);const roof=new THREE.Mesh(new THREE.BoxGeometry(127,.7,18),mat(0xd6dcdf,.7));roof.position.set(18,11.2,-36);scene.add(roof);
- for(let x=-52;x<65;x+=10){const marker=new THREE.Mesh(new THREE.BoxGeometry(.6,4,.6),white);marker.position.set(x,2,17.6);scene.add(marker)}
- const finish=new THREE.Mesh(new THREE.BoxGeometry(.18,.04,39),new THREE.MeshBasicMaterial({color:0xffffff}));finish.position.set(finishX,.03,0);scene.add(finish);
- for(let i=0;i<12;i++){const p=new THREE.Mesh(new THREE.BoxGeometry(.38,3,.38),mat(i%2?0xffffff:0x181818,.7));p.position.set(finishX,1.5,-18+i*3.3);scene.add(p)}
+ const mat=(col,r=1)=>new THREE.MeshStandardMaterial({color:col,roughness:r});
+ // Build a wide ribbon following the backstretch, sweeping turn and home straight.
+ const samples=220, halfW=17.5, verts=[], uvs=[], idx=[];
+ for(let i=0;i<=samples;i++){
+   const pr=100*i/samples, cp=centerPoint(pr), t=tangentAt(pr), side=new THREE.Vector3(-t.z,0,t.x).normalize();
+   const a=cp.clone().add(side.clone().multiplyScalar(halfW));
+   const b=cp.clone().add(side.clone().multiplyScalar(-halfW));
+   verts.push(a.x,a.y,a.z,b.x,b.y,b.z);uvs.push(i/14,0,i/14,1);
+   if(i<samples){const k=i*2;idx.push(k,k+1,k+2,k+1,k+3,k+2)}
+ }
+ const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.setIndex(idx);g.computeVertexNormals();
+ const turf=new THREE.Mesh(g,mat(0x397e46,.96));turf.receiveShadow=true;scene.add(turf);
+ // Mowing bands across the racing surface
+ for(let pr=3;pr<100;pr+=5){
+   const cp=centerPoint(pr), t=tangentAt(pr), side=new THREE.Vector3(-t.z,0,t.x).normalize();
+   const band=new THREE.Mesh(new THREE.PlaneGeometry(35,3.2),new THREE.MeshBasicMaterial({color:(Math.floor(pr/5)%2?0x4a9155:0x327540),transparent:true,opacity:.18,side:THREE.DoubleSide}));
+   band.rotation.x=-Math.PI/2;band.rotation.z=Math.atan2(t.z,t.x);band.position.copy(cp);band.position.y+=.025;scene.add(band);
+ }
+ // Rails on both edges
+ const railMat=mat(0xf6f6f6,.55);
+ [-18.1,18.1].forEach(off=>{
+   const pts=[];
+   for(let i=0;i<=150;i++){const pr=100*i/150, cp=centerPoint(pr),t=tangentAt(pr),side=new THREE.Vector3(-t.z,0,t.x).normalize();pts.push(cp.add(side.multiplyScalar(off)).add(new THREE.Vector3(0,1.0,0)))}
+   const curve=new THREE.CatmullRomCurve3(pts,false,'centripetal');
+   const rail=new THREE.Mesh(new THREE.TubeGeometry(curve,240,.10,7,false),railMat);scene.add(rail);
+   for(let i=0;i<=60;i++){const pr=100*i/60,cp=centerPoint(pr),t=tangentAt(pr),side=new THREE.Vector3(-t.z,0,t.x).normalize();const pp=cp.add(side.multiplyScalar(off));const post=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,1.8,6),railMat);post.position.set(pp.x,.9,pp.z);scene.add(post)}
+ });
+ // Infield
+ const infield=new THREE.Mesh(new THREE.CircleGeometry(20,72),mat(0x2d6d3c,1));infield.rotation.x=-Math.PI/2;infield.position.set(17,-.03,0);infield.scale.set(1.2,.72,1);scene.add(infield);
+ // Grandstand along home straight
+ const stand=new THREE.Mesh(new THREE.BoxGeometry(100,12,15),mat(0x66777f,.9));stand.position.set(-18,6,-34);scene.add(stand);
+ const roof=new THREE.Mesh(new THREE.BoxGeometry(108,.7,20),mat(0xd6dce0,.65));roof.position.set(-18,12.4,-34);scene.add(roof);
+ for(let i=0;i<20;i++){const row=new THREE.Mesh(new THREE.BoxGeometry(92,.15,.35),new THREE.MeshBasicMaterial({color:i%2?0xb8c1c5:0x8b999e}));row.position.set(-18,2+i*.38,-26.7-i*.22);scene.add(row)}
+ // Distance posts and finish
+ for(const pr of [72,80,88,94]){
+   const cp=centerPoint(pr), t=tangentAt(pr), side=new THREE.Vector3(-t.z,0,t.x).normalize(), pp=cp.clone().add(side.multiplyScalar(-18.5));
+   const post=new THREE.Mesh(new THREE.BoxGeometry(.45,4,.45),railMat);post.position.set(pp.x,2,pp.z);scene.add(post);
+ }
+ const fp=centerPoint(100), ft=tangentAt(99.5), fs=new THREE.Vector3(-ft.z,0,ft.x).normalize();
+ const finishLine=new THREE.Mesh(new THREE.PlaneGeometry(36,.28),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));finishLine.rotation.x=-Math.PI/2;finishLine.rotation.z=Math.atan2(ft.z,ft.x)+Math.PI/2;finishLine.position.set(fp.x,.035,fp.z);scene.add(finishLine);
+ // trees / skyline depth
+ for(let i=0;i<35;i++){const tr=new THREE.Mesh(new THREE.ConeGeometry(1.3+Math.random(),4+Math.random()*3,8),mat(0x285b35,.95));tr.position.set(-70+Math.random()*145,2,-48-Math.random()*10);scene.add(tr)}
 }
 function resize3(){if(!renderer)return;const b=$('stage').getBoundingClientRect();renderer.setSize(b.width,b.height,false);camera.aspect=b.width/b.height;camera.updateProjectionMatrix()}
 function rebuildHorses(){
@@ -222,7 +282,7 @@ function rebuildHorses(){
    const body=new THREE.Mesh(new THREE.CylinderGeometry(.22,.30,.75,10),clothMat);body.rotation.z=-.25;body.position.set(.05,2.48,0);group.add(body);
    const head=new THREE.Mesh(new THREE.SphereGeometry(.19,12,8),new THREE.MeshStandardMaterial({color:0xe0ac84}));head.position.set(.22,2.91,0);group.add(head);
    const helmet=new THREE.Mesh(new THREE.SphereGeometry(.22,12,8),clothMat);helmet.scale.y=.62;helmet.position.set(.22,3.05,0);group.add(helmet);
-   group.position.set(startX,.02,(i-(room.count-1)/2)*3.3);scene.add(group);
+   const ip=lanePoint(0,i);group.position.copy(ip);const it=tangentAt(0);group.rotation.y=-Math.atan2(it.z,it.x);scene.add(group);
    const mixer=new THREE.AnimationMixer(model);if(horseAnim)mixer.clipAction(horseAnim).setDuration(.72).play();mixers.push(mixer);visuals.push({group,mixer});
  });
 }
@@ -246,15 +306,37 @@ function callText(sorted){
 }
 function animate3(){
  requestAnimationFrame(animate3);if(!renderer||!scene||!camera)return;const dt=Math.min(.05,clock3.getDelta());
- const running=room?.status==='running';mixers.forEach((m,i)=>{m.timeScale=running?1.35:0.35;m.update(dt)});
- if(room&&visuals.length===room.count){room.horses.forEach((h,i)=>{const v=visuals[i];const x=startX+(finishX-startX)*(h.progress/100);v.group.position.x+=(x-v.group.position.x)*.18;v.group.position.z=(i-(room.count-1)/2)*3.3;});
-   const leader=Math.max(0,...room.horses.map(h=>h.progress));const lx=startX+(finishX-startX)*(leader/100),e=room.elapsed||0;let pos,look,name;
-   if(room.status==='lobby'||room.status==='countdown'){pos=new THREE.Vector3(startX-8,8,27);look=new THREE.Vector3(startX+6,1,0);name='CAM 1　ゲート前'}
-   else if(e<18){pos=new THREE.Vector3(lx-12,7.5,25);look=new THREE.Vector3(lx+4,1.2,0);name='CAM 2　横追い'}
-   else if(e<30){pos=new THREE.Vector3(lx-3,11,27);look=new THREE.Vector3(lx+5,1.1,0);name='CAM 3　馬群'}
-   else if(leader<84){pos=new THREE.Vector3(lx-15,6.5,22);look=new THREE.Vector3(lx+7,1.1,0);name='CAM 4　最後の直線'}
-   else{pos=new THREE.Vector3(finishX+8,8,27);look=new THREE.Vector3(finishX-8,1.1,0);name='CAM 5　ゴール前'}
-   camera.position.lerp(pos,.055);camera.lookAt(look);$('cameraName').textContent=name;
+ const running=room?.status==='running';mixers.forEach(m=>{m.timeScale=running?1.32:.28;m.update(dt)});
+ if(room&&visuals.length===room.count){
+   room.horses.forEach((h,i)=>{
+     const v=visuals[i], target=lanePoint(h.progress,i), tan=tangentAt(h.progress);
+     v.group.position.lerp(target,.22);
+     const yaw=-Math.atan2(tan.z,tan.x);
+     let d=yaw-v.group.rotation.y;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;v.group.rotation.y+=d*.16;
+   });
+   const leader=Math.max(0,...room.horses.map(h=>h.progress)), lp=centerPoint(leader), lt=tangentAt(leader), side=new THREE.Vector3(-lt.z,0,lt.x).normalize(), e=room.elapsed||0;
+   let pos,look,name;
+   if(room.status==='lobby'||room.status==='countdown'){
+     const sp=centerPoint(0),st=tangentAt(0),ss=new THREE.Vector3(-st.z,0,st.x).normalize();
+     pos=sp.clone().add(ss.multiplyScalar(25)).add(new THREE.Vector3(-6,8,0));look=sp.clone().add(st.multiplyScalar(9)).add(new THREE.Vector3(0,1.2,0));name='CAM 1　スタート地点';
+   } else if(leader<32){
+     // long telephoto side tracking down the backstretch
+     pos=lp.clone().add(side.multiplyScalar(27)).add(new THREE.Vector3(-7,7.5,0));look=lp.clone().add(lt.multiplyScalar(7)).add(new THREE.Vector3(0,1.1,0));name='CAM 2　向正面・横追い';
+   } else if(leader<53){
+     // high sweeping third-corner shot
+     pos=lp.clone().add(side.multiplyScalar(31)).add(new THREE.Vector3(0,13,0));look=lp.clone().add(lt.multiplyScalar(5)).add(new THREE.Vector3(0,1,0));name='CAM 3　3コーナー';
+   } else if(leader<68){
+     // compressed field through fourth turn
+     pos=lp.clone().add(side.multiplyScalar(24)).add(new THREE.Vector3(-5,9,0));look=lp.clone().add(lt.multiplyScalar(9)).add(new THREE.Vector3(0,1,0));name='CAM 4　4コーナー';
+   } else if(leader<91){
+     // classic home-straight side telephoto
+     pos=lp.clone().add(side.multiplyScalar(29)).add(new THREE.Vector3(-9,7,0));look=lp.clone().add(lt.multiplyScalar(11)).add(new THREE.Vector3(0,1.05,0));name='CAM 5　最後の直線';
+   } else {
+     // fixed finish camera, slightly down-track and outside
+     const fp=centerPoint(100),ft=tangentAt(99),fs=new THREE.Vector3(-ft.z,0,ft.x).normalize();
+     pos=fp.clone().add(fs.multiplyScalar(25)).add(ft.clone().multiplyScalar(5)).add(new THREE.Vector3(0,8,0));look=fp.clone().add(ft.clone().multiplyScalar(-9)).add(new THREE.Vector3(0,1,0));name='CAM 6　ゴール前';
+   }
+   camera.position.lerp(pos,.06);camera.lookAt(look);$('cameraName').textContent=name;
  }
  renderer.render(scene,camera);
 }
