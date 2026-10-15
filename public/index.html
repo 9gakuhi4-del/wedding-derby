@@ -3,395 +3,63 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>結婚記念杯 LIVE</title>
+<meta name="theme-color" content="#071810">
+<title>結婚記念杯｜Wedding Derby Live</title>
 <style>
-:root{--green:#09251a;--panel:#10382a;--gold:#e8bf68;--muted:#b9cec3}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#06140f;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif}
-button,input,select{font:inherit}.hidden{display:none!important}.wrap{max-width:1200px;margin:auto;padding:12px}.card{background:linear-gradient(180deg,#123d2e,#0c2b20);border:1px solid #315846;border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 10px 30px #0003}
-.brand{text-align:center}.brand .en{font-size:10px;letter-spacing:.28em;color:#e0c785}.brand h1{margin:2px 0;color:#f5d58d;font-size:29px;letter-spacing:.13em}.brand p{margin:3px;color:#c8d8cf;font-size:12px}
-.btn{border:0;border-radius:12px;background:var(--gold);color:#231a0b;padding:12px 16px;font-weight:900;cursor:pointer}.btn.dark{background:#1d4a38;color:#fff;border:1px solid #4f725f}.btn.red{background:#a43a38;color:#fff}.btn:disabled{opacity:.4}.big{width:100%;min-height:68px;font-size:19px}
-input,select{background:#081f17;color:#fff;border:1px solid #476b59;border-radius:10px;padding:10px}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.grow{flex:1;min-width:150px}
-#landing{max-width:560px;margin:auto}.modeBtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}.joinLine{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}
-.code{font:900 28px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.13em;color:#ffe1a1}.tiny{font-size:11px;color:var(--muted)}.statusDot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:#888}.statusDot.on{background:#55d77b;box-shadow:0 0 10px #55d77b}
-.names{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:7px;margin-top:10px}.nameRow{display:flex;gap:6px;align-items:center}.nameRow b{width:22px}.nameRow input{min-width:0;width:100%}.ready{font-size:10px;padding:3px 6px;border-radius:99px;background:#493}.notready{background:#555}
-#stage{height:min(62vw,650px);min-height:390px;position:relative;overflow:hidden;border-radius:16px;border:2px solid #a88951;background:#adc5d0;box-shadow:0 20px 50px #0008}.stageFull{height:100vh!important;border-radius:0!important;border:0!important}
-#cinematic{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;z-index:0}#canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;opacity:.05;pointer-events:none}.hud{position:absolute;inset:0;pointer-events:none}.shadeTop{position:absolute;left:0;right:0;top:0;height:100px;background:linear-gradient(#04100bd9,transparent)}
-.top{position:absolute;top:9px;left:10px;right:10px;display:flex;justify-content:space-between;gap:8px}.pill{background:#071c14df;border:1px solid #ffffff25;border-radius:8px;padding:6px 9px;font-size:11px;font-weight:900;backdrop-filter:blur(5px)}.live:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#f23;margin-right:6px;box-shadow:0 0 9px #f23}
-.cam{position:absolute;top:48px;left:10px}.leader{position:absolute;top:48px;right:10px;width:min(210px,40%);background:#061a12e8;border:1px solid #ffffff25;border-radius:10px;padding:7px;backdrop-filter:blur(5px)}.leadRow{display:grid;grid-template-columns:20px 13px 1fr;gap:5px;align-items:center;padding:3px 0;font-size:11px;border-bottom:1px solid #ffffff12}.leadRow:last-child{border:0}.cloth{height:13px;border:1px solid #ffffff99;border-radius:2px}
-.commentary{position:absolute;left:10px;bottom:10px;max-width:78%;background:#061a12e8;border:1px solid #ffffff25;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:800;line-height:1.45;backdrop-filter:blur(5px)}
-.countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:min(20vw,150px);font-weight:1000;text-shadow:0 7px 25px #000;color:#ffe09c}.finishFlash{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#06140f8c;font-size:min(11vw,70px);font-weight:1000;color:#ffe09c;text-shadow:0 5px 25px #000}.finishFlash.show{display:flex;animation:flash .8s ease}@keyframes flash{0%{opacity:0;transform:scale(.7)}45%{opacity:1;transform:scale(1.08)}100%{opacity:0;transform:scale(1)}}
-.hostTools{display:grid;grid-template-columns:1fr auto auto;gap:8px}.links{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.linkbox{background:#071f17;border:1px solid #345947;border-radius:10px;padding:8px;font-size:11px;word-break:break-all}.qr{background:white;padding:7px;border-radius:10px;width:max-content;max-width:100%}
-.player{max-width:520px;margin:auto}.horseBadge{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0}.num{width:54px;height:54px;border-radius:10px;display:grid;place-items:center;font-size:28px;font-weight:1000;border:2px solid #fff}.meter{height:19px;background:#071e16;border-radius:99px;overflow:hidden;border:1px solid #315846}.meter>div{height:100%;width:100%;background:#59cb79;transition:width .1s linear}.tap{width:100%;height:160px;border:0;border-radius:20px;background:linear-gradient(#f0cd7b,#dca949);color:#281b08;font-size:30px;font-weight:1000;touch-action:manipulation;user-select:none;-webkit-user-select:none;box-shadow:0 8px 0 #9f752f;margin-top:12px}.tap:active{transform:translateY(5px);box-shadow:0 3px 0 #9f752f}.tap:disabled{opacity:.38;transform:none}.pStatus{text-align:center;font-weight:800;margin:8px}.result{white-space:pre-line;line-height:1.75;text-align:center;font-weight:900}
-#error{position:fixed;left:10px;right:10px;bottom:10px;background:#812f2f;color:#fff;padding:10px;border-radius:10px;z-index:50}
-@media(max-width:650px){.brand h1{font-size:23px}.modeBtns{grid-template-columns:1fr}.hostTools{grid-template-columns:1fr 1fr}.hostTools .roomInfo{grid-column:1/-1}.links{grid-template-columns:1fr}.leader{width:150px}.commentary{max-width:93%;font-size:11px}#stage{height:450px}.wrap{padding:8px}}
+:root{--bg:#06130e;--panel:#102f24;--panel2:#0b251b;--line:#365847;--gold:#edc775;--cream:#ffe4aa;--text:#fff;--muted:#bdd0c5;--red:#b43d3a}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 50% 0,#14382a 0,#06130e 55%);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;overscroll-behavior:none}button,input,select{font:inherit}.hidden{display:none!important}.wrap{width:min(1240px,100%);margin:auto;padding:10px}.card{background:linear-gradient(180deg,rgba(18,57,43,.98),rgba(8,31,23,.98));border:1px solid var(--line);border-radius:16px;padding:13px;margin:9px 0;box-shadow:0 12px 35px #0005}.brand{text-align:center}.brand .eyebrow{font-size:10px;letter-spacing:.32em;color:#dbc485}.brand h1{margin:3px 0;color:#f4d48d;font-size:28px;letter-spacing:.14em}.brand p{margin:3px;color:#c9d9d0;font-size:12px}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.between{justify-content:space-between}.grow{flex:1;min-width:160px}.btn{border:0;border-radius:12px;background:var(--gold);color:#261c0b;padding:11px 15px;font-weight:900;box-shadow:0 3px 0 #96702d;touch-action:manipulation}.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #96702d}.btn.dark{background:#1d4937;color:#fff;border:1px solid #527260;box-shadow:none}.btn.red{background:var(--red);color:#fff;box-shadow:none}.btn:disabled{opacity:.4;transform:none}input,select{background:#071d15;color:#fff;border:1px solid #496b59;border-radius:10px;padding:10px}.full{width:100%}.large{min-height:66px;font-size:18px}.tiny{font-size:11px;color:var(--muted)}.code{font:900 27px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;color:var(--cream)}
+#landing,#joinCard,#player{max-width:540px;margin-left:auto;margin-right:auto}.modeGrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.joinGrid{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}.hostGrid{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center}.nameGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;margin-top:10px}.nameRow{display:grid;grid-template-columns:34px 1fr 52px;gap:5px;align-items:center}.numMini{width:31px;height:31px;border-radius:7px;display:grid;place-items:center;font-weight:1000;border:2px solid #ffffffc9}.statusTag{font-size:10px;border-radius:99px;padding:4px 6px;text-align:center;background:#4a5550}.statusTag.ready{background:#287c46}.links{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}.linkBox{background:#061d15;border:1px solid #335545;border-radius:9px;padding:8px;font-size:10px;word-break:break-all}.qr{background:#fff;border-radius:10px;padding:7px;width:max-content;max-width:100%;margin-top:8px}
+#raceView{position:relative}.stage{height:min(60vw,670px);min-height:390px;position:relative;overflow:hidden;border-radius:16px;border:2px solid #ac8a50;background:#050a07;box-shadow:0 20px 55px #000a}.stage:fullscreen{height:100vh!important;width:100vw!important;border:0;border-radius:0}.cinematic,.poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.cinematic{z-index:0;background:#000}.poster{z-index:0;transition:opacity .3s;transform:scale(1.04)}.poster.moving{animation:kenburns 15s linear forwards}@keyframes kenburns{from{transform:scale(1.04) translateX(0)}to{transform:scale(1.14) translateX(-1.5%)}}.shade{position:absolute;inset:0;z-index:1;background:linear-gradient(#03100bcf 0,transparent 24%,transparent 66%,#03100bd9 100%);pointer-events:none}.hud{position:absolute;inset:0;z-index:2;pointer-events:none}.topHud{position:absolute;top:8px;left:9px;right:9px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.pill{background:#061811e8;border:1px solid #ffffff27;border-radius:8px;padding:6px 9px;font-size:11px;font-weight:900;backdrop-filter:blur(5px)}.live:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#f33;box-shadow:0 0 9px #f33;margin-right:6px}.phase{font-size:13px}.leaderboard{position:absolute;top:48px;right:9px;width:min(270px,47%);background:#04140eea;border:1px solid #ffffff2b;border-radius:10px;padding:7px;backdrop-filter:blur(5px)}.leadRow{display:grid;grid-template-columns:30px 1fr auto;gap:7px;align-items:center;padding:4px 0;border-bottom:1px solid #ffffff13;font-size:12px}.leadRow:last-child{border:0}.leadNo{height:27px;border-radius:6px;display:grid;place-items:center;font-size:17px;font-weight:1000;border:2px solid #fff}.bride{color:#ffe29b;font-size:9px;font-weight:900}.commentary{position:absolute;left:9px;bottom:95px;max-width:74%;background:#04140eea;border:1px solid #ffffff2b;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:900;line-height:1.45;backdrop-filter:blur(5px)}.raceStrip{position:absolute;left:9px;right:9px;bottom:10px;height:73px;background:#04140eea;border:1px solid #ffffff2b;border-radius:11px;padding:13px 18px 8px;backdrop-filter:blur(5px)}.trackLine{position:absolute;left:24px;right:24px;top:34px;height:8px;border-radius:99px;background:linear-gradient(90deg,#2d7040,#4aa75d);border:1px solid #ffffff90}.finishLine{position:absolute;right:24px;top:18px;bottom:8px;width:8px;background:repeating-linear-gradient(0deg,#fff 0 6px,#111 6px 12px)}.runnerDot{position:absolute;top:17px;width:34px;height:34px;margin-left:-17px;border-radius:50%;display:grid;place-items:center;font-weight:1000;font-size:18px;border:3px solid #fff;box-shadow:0 4px 12px #000;transition:left .12s linear;z-index:3}.runnerDot.brideDot{border-color:#f4d274;box-shadow:0 0 16px #ffe09a}.startLabel,.finishLabel{position:absolute;bottom:4px;font-size:9px;color:#c5d6cc}.startLabel{left:19px}.finishLabel{right:17px}.countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:min(21vw,150px);font-weight:1000;color:#ffe19b;text-shadow:0 7px 30px #000}.winner{position:absolute;inset:0;z-index:8;background:#03100ddb;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}.winnerNo{font-size:min(22vw,170px);font-weight:1000;line-height:.9}.winnerName{font-size:min(7vw,48px);font-weight:1000;color:#ffe09a}.finishList{margin-top:14px;font-size:min(3.4vw,19px);line-height:1.65}.videoNotice{position:absolute;left:9px;top:48px;background:#061811d8;border-radius:7px;padding:5px 8px;font-size:10px;color:#c9d9d0}
+.playerHead{display:flex;align-items:center;justify-content:center;gap:12px;margin:12px 0}.playerNo{width:64px;height:64px;border:3px solid #fff;border-radius:12px;display:grid;place-items:center;font-size:34px;font-weight:1000}.meter{height:20px;background:#071c15;border:1px solid #345846;border-radius:99px;overflow:hidden}.meterFill{height:100%;width:100%;background:#5dcc7b;transition:width .1s linear,background .15s}.tap{width:100%;height:165px;border:0;border-radius:22px;background:linear-gradient(#f3d386,#dda84c);color:#281b08;font-size:30px;font-weight:1000;box-shadow:0 9px 0 #9c712d;touch-action:manipulation;user-select:none;-webkit-user-select:none;margin-top:12px}.tap:active{transform:translateY(5px);box-shadow:0 4px 0 #9c712d}.tap:disabled{opacity:.38;transform:none}.playerStatus{text-align:center;font-weight:900;margin:10px}.result{white-space:pre-line;text-align:center;line-height:1.7;font-weight:900}.connDot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#777;margin-right:5px}.connDot.on{background:#55d479;box-shadow:0 0 9px #55d479}.error{position:fixed;left:10px;right:10px;bottom:10px;background:#8b3432;color:#fff;padding:11px;border-radius:11px;z-index:99;text-align:center;font-weight:800}
+@media(max-width:680px){.wrap{padding:7px}.brand h1{font-size:22px}.modeGrid{grid-template-columns:1fr}.hostGrid{grid-template-columns:1fr 1fr}.hostGrid .roomCell{grid-column:1/-1}.links{grid-template-columns:1fr}.stage{height:470px}.leaderboard{width:155px}.leadRow{grid-template-columns:27px 1fr;font-size:10px}.leadRow>span:last-child{display:none}.commentary{max-width:94%;bottom:95px;font-size:10px}.nameGrid{grid-template-columns:1fr 1fr}.nameRow{grid-template-columns:30px 1fr}.nameRow .statusTag{grid-column:1/-1}.raceStrip{height:70px}.runnerDot{width:29px;height:29px;margin-left:-14px;font-size:15px}.links{display:none}}
 </style>
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-<script type="importmap">
-{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}
-</script>
 </head>
 <body>
 <div class="wrap">
-<section class="brand card">
-<div class="en">WEDDING DERBY LIVE</div>
-<h1>結 婚 記 念 杯</h1>
-<p>リアルタイム参加型 3D競馬</p>
-</section>
-
-<section id="landing" class="card">
-<h2 style="margin-top:0">レースを始める</h2>
-<div class="modeBtns">
-<button class="btn big" id="newRace">新しいレースを作る</button>
-<button class="btn dark big" id="joinOpen">参加者として入る</button>
-</div>
-<div id="joinBox" class="hidden">
-<div class="joinLine"><input id="joinCode" placeholder="ルームコード 例 ABCD2" maxlength="5" style="text-transform:uppercase"><button class="btn" id="joinNext">次へ</button></div>
-</div>
-<p class="tiny">参加者は4G/5GでもOK。同じWi‑Fiは不要です。</p>
-</section>
-
-<section id="joinNameCard" class="card hidden player">
-<h2>出走登録</h2>
-<div class="code" id="joinCodeView"></div>
-<input id="playerName" class="grow" placeholder="馬名（出席者名）" maxlength="14" style="width:100%;margin:10px 0">
-<button id="joinRace" class="btn big">この名前で参加</button>
-</section>
-
-<section id="host" class="hidden">
-<div class="card">
-<div class="hostTools">
-<div class="roomInfo"><span class="tiny">ROOM</span> <span class="code" id="roomCode"></span></div>
-<button class="btn" id="startRace">発走する</button>
-<button class="btn dark" id="resetRace">リセット</button>
-</div>
-<div class="row" style="margin-top:8px">
-<label>出走頭数 <select id="count"><option>6</option><option selected>8</option><option>9</option></select></label>
-<span id="joinedText" class="tiny"></span>
-<button class="btn dark" id="full">大画面</button>
-</div>
-<div id="hostNames" class="names"></div>
-<div class="links">
-<div><div class="tiny">参加者用URL</div><div class="linkbox" id="joinUrl"></div></div>
-<div><div class="tiny">観戦画面URL</div><div class="linkbox" id="screenUrl"></div></div>
-</div>
-<div id="qr" class="qr" style="margin-top:8px"></div>
-</div>
-</section>
-
-<section id="screenOnly" class="hidden">
-<div class="card row between"><div>ROOM <span class="code" id="screenCode"></span></div><button class="btn dark" id="screenFull">全画面</button></div>
-</section>
-
-<section id="raceView" class="hidden">
-<div id="stage">
-<canvas id="canvas"></canvas>
-<div class="hud">
-<div class="shadeTop"></div>
-<div class="top"><div class="pill live">LIVE　結婚記念杯</div><div class="pill" id="phase">発走前</div></div>
-<div class="pill cam" id="cameraName">CAM 1　ゲート前</div>
-<div class="leader" id="leader"></div>
-<div class="commentary" id="commentary">各馬ゲート入り。まもなく発走です。</div>
-<div class="countdown hidden" id="countdown"></div>
-<div class="finishFlash" id="finishFlash">GOAL!</div><div id="winnerOverlay" class="hidden" style="position:absolute;inset:0;background:rgba(4,14,10,.84);display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;z-index:3"><div><div style="font-size:14px;letter-spacing:.2em;color:#efd48e">WINNER</div><div id="winnerNum" style="font-size:min(20vw,150px);font-weight:1000;line-height:1;color:#fff">8</div><div id="winnerName" style="font-size:min(8vw,48px);font-weight:1000;color:#ffe09b">新婦</div></div></div>
-</div>
-</div>
-<div id="screenResult" class="card result hidden"></div>
-</section>
-
-<section id="player" class="card player hidden">
-<div class="row between"><div>ROOM <span class="code" id="pRoom"></span></div><div><span id="connDot" class="statusDot"></span><span id="connText" class="tiny">接続中</span></div></div>
-<div class="horseBadge"><div class="num" id="pNum">1</div><div><div class="tiny">あなたの馬</div><div style="font-size:23px;font-weight:1000" id="pName">ゲスト1</div></div></div>
-<div class="row between"><b>スタミナ</b><span id="pSt">100%</span></div>
-<div class="meter"><div id="pFill"></div></div>
-<div class="pStatus" id="pStatus">発走を待っています</div>
-<button class="btn dark big" id="readyBtn">準備OK</button>
-<button class="tap" id="tapBtn" disabled>連打して走れ！</button>
-<div class="row between" style="margin-top:10px"><span id="tapCount">0連打</span><span id="pRank">現在 - 位</span></div>
-<div id="pResult" class="result"></div>
-</section>
-</div>
-<div id="error" class="hidden"></div>
-
-<script type="module">
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-
-const socket=window.io({transports:['websocket','polling']});
-const $=id=>document.getElementById(id);
-const params=new URLSearchParams(location.search);
-let mode=params.get('mode')||'landing', roomCode=(params.get('room')||'').toUpperCase();
-let room=null, mySlot=null, myToken=null, ready=false, localTaps=0, pendingTaps=0;
-const colors=['#f5f5f5','#202020','#d43e35','#3284db','#e5cc36','#3ba663','#ee8a32','#d96ba9','#8063c4'];
-
+<section class="brand card"><div class="eyebrow">WEDDING DERBY LIVE</div><h1>結 婚 記 念 杯</h1><p>スマホ連打 × スタミナ × リアルタイム競馬</p></section>
+<section id="landing" class="card"><h2 style="margin-top:0">レースを始める</h2><div class="modeGrid"><button id="newRace" class="btn large">新しいレースを作る</button><button id="joinOpen" class="btn dark large">参加者として入る</button></div><div id="joinBox" class="joinGrid hidden"><input id="joinCode" maxlength="5" placeholder="ルームコード" style="text-transform:uppercase"><button id="joinNext" class="btn">次へ</button></div><p class="tiny">参加者は各自の4G・5Gから参加できます。同じWi‑Fiは不要です。</p></section>
+<section id="joinCard" class="card hidden"><div class="tiny">ROOM</div><div id="joinCodeView" class="code"></div><input id="playerName" class="full" maxlength="14" placeholder="馬名・出席者名" style="margin:10px 0"><button id="joinRace" class="btn large full">この名前で出走登録</button></section>
+<section id="host" class="hidden"><div class="card"><div class="hostGrid"><div class="roomCell"><span class="tiny">ROOM</span> <span id="roomCode" class="code"></span></div><button id="startRace" class="btn">発走</button><button id="resetRace" class="btn dark">リセット</button></div><div class="row between" style="margin-top:9px"><label>出走頭数 <select id="count"><option>6</option><option selected>8</option><option>9</option></select></label><span id="joinedText" class="tiny"></span><button id="fullBtn" class="btn dark">大画面</button></div><div id="hostNames" class="nameGrid"></div><div class="links"><div><div class="tiny">参加者用URL</div><div id="joinUrl" class="linkBox"></div></div><div><div class="tiny">観戦用URL</div><div id="screenUrl" class="linkBox"></div></div></div><div id="qr" class="qr"></div></div></section>
+<section id="screenOnly" class="card hidden"><div class="row between"><div>ROOM <span id="screenCode" class="code"></span></div><button id="screenFull" class="btn dark">全画面</button></div></section>
+<section id="raceView" class="hidden"><div id="stage" class="stage"><video id="raceFilm" class="cinematic hidden" muted playsinline preload="auto"></video><img id="racePoster" class="poster" alt="競馬場"><div class="shade"></div><div class="hud"><div class="topHud"><div class="pill live">LIVE　結婚記念杯</div><div id="phase" class="pill phase">発走前</div></div><div id="videoNotice" class="videoNotice">REAL RACE VISUAL</div><div id="leaderboard" class="leaderboard"></div><div id="commentary" class="commentary">各馬ゲート入り。参加者の準備を待っています。</div><div class="raceStrip"><div class="trackLine"></div><div class="finishLine"></div><div class="startLabel">START</div><div class="finishLabel">GOAL</div><div id="runnerDots"></div></div><div id="countdown" class="countdown hidden"></div><div id="winner" class="winner hidden"><div><div style="letter-spacing:.25em;color:#e8cc88;font-weight:900">WINNER</div><div id="winnerNo" class="winnerNo"></div><div id="winnerName" class="winnerName"></div><div id="finishList" class="finishList"></div></div></div></div></div></section>
+<section id="player" class="card hidden"><div class="row between"><div>ROOM <span id="pRoom" class="code"></span></div><div><span id="connDot" class="connDot"></span><span id="connText" class="tiny">接続中</span></div></div><div class="playerHead"><div id="pNum" class="playerNo">1</div><div><div class="tiny">あなたの馬</div><div id="pName" style="font-size:24px;font-weight:1000">ゲスト1</div><div id="pBride" class="bride"></div></div></div><div class="row between"><b>スタミナ</b><span id="pSt">100%</span></div><div class="meter"><div id="pFill" class="meterFill"></div></div><div id="pStatus" class="playerStatus">発走を待っています</div><button id="readyBtn" class="btn dark large full">準備OK</button><button id="tapBtn" class="tap" disabled>連打して走れ！</button><div class="row between" style="margin-top:11px"><span id="tapCount">0連打</span><span id="pRank">現在 − 位</span></div><div id="pResult" class="result"></div></section>
+</div><div id="error" class="error hidden"></div>
+<script>
+(()=>{
+const POSTER_URL='https://d2jqrm6oza8nb6.cloudfront.net/datasets/3c35a3c7-d4b9-4151-82d5-979b5c6c6206.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNDRhYTM3ZmM0ZDBkZDQ3MCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MjIzMDE0MH0.5v0Wp2c4FbVpGZY9zfZ_Mwbds7-rurbWP6Ft94SkfH0';
+const CINEMATIC_URL='';
+const COLORS=['#f5f5f5','#202020','#d43e35','#3180d5','#e4ca33','#36a261','#ed8930','#db6eaa','#8164c4'];
+const TEXT=['#111','#fff','#fff','#fff','#111','#fff','#fff','#fff','#fff'];
+const $=id=>document.getElementById(id);const socket=io({transports:['websocket','polling']});
+const qs=new URLSearchParams(location.search);let mode=qs.get('mode')||'landing',roomCode=(qs.get('room')||'').toUpperCase(),room=null,mySlot=null,myToken=null,ready=false,localTaps=0,pendingTaps=0,lastFinishCount=0,filmStarted=false;
+$('racePoster').src=POSTER_URL;if(CINEMATIC_URL){$('raceFilm').src=CINEMATIC_URL;$('raceFilm').classList.remove('hidden');}
+function show(id){['landing','joinCard','host','screenOnly','raceView','player'].forEach(x=>$(x)&&$(x).classList.add('hidden'));$(id)&&$(id).classList.remove('hidden')}
 function err(msg){$('error').textContent=msg;$('error').classList.remove('hidden');setTimeout(()=>$('error').classList.add('hidden'),4000)}
-function show(id){['landing','joinNameCard','host','screenOnly','raceView','player'].forEach(x=>$(x)?.classList.add('hidden'));$(id)?.classList.remove('hidden')}
-function pageUrl(m,c){return location.origin+'/?room='+encodeURIComponent(c)+'&mode='+m}
-function rankOf(slot){if(!room)return null;const arr=room.horses.map(h=>h).sort((a,b)=>{if(a.finish!=null&&b.finish!=null)return a.finish-b.finish;if(a.finish!=null)return -1;if(b.finish!=null)return 1;return b.progress-a.progress});return arr.findIndex(h=>h.slot===slot)+1}
-
-$('newRace').onclick=()=>socket.emit('createRoom',{count:8},res=>{if(!res.ok)return err('作成できませんでした');room=res.room;roomCode=room.code;history.replaceState({},'',pageUrl('host',roomCode));mode='host';setupHost();});
-$('joinOpen').onclick=()=>$('joinBox').classList.remove('hidden');
-$('joinNext').onclick=()=>{const c=$('joinCode').value.trim().toUpperCase();if(c.length<4)return err('ルームコードを入力して');roomCode=c;openJoinName()};
-$('joinRace').onclick=()=>{const name=$('playerName').value.trim();if(!name)return err('名前を入力して');const key='wd-token-'+roomCode;const token=localStorage.getItem(key)||null;socket.emit('joinRoom',{code:roomCode,name,token},res=>{if(!res.ok)return err(res.error==='ROOM_FULL'?'満員です':'ルームが見つかりません');mySlot=res.slot;myToken=res.token;localStorage.setItem(key,myToken);room=res.room;history.replaceState({},'',pageUrl('player',roomCode));mode='player';setupPlayer();});};
-
-function openJoinName(){$('joinCodeView').textContent=roomCode;show('joinNameCard')}
-function setupHost(){show('host');$('raceView').classList.remove('hidden');$('roomCode').textContent=roomCode;$('joinUrl').textContent=pageUrl('player',roomCode);$('screenUrl').textContent=pageUrl('screen',roomCode);$('qr').innerHTML='';new QRCode($('qr'),{text:pageUrl('player',roomCode),width:150,height:150,correctLevel:QRCode.CorrectLevel.M});init3D();renderHost()}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function urlFor(m,c){return location.origin+'/?mode='+m+'&room='+encodeURIComponent(c)}
+function rankList(){if(!room)return[];return [...room.horses].sort((a,b)=>{if(a.finish!=null&&b.finish!=null)return a.finish-b.finish;if(a.finish!=null)return-1;if(b.finish!=null)return 1;return b.progress-a.progress})}
+function rankOf(slot){return rankList().findIndex(h=>h.slot===slot)+1}
+function openJoin(){roomCode=$('joinCode').value.trim().toUpperCase();if(roomCode.length!==5)return err('5文字のルームコードを入力してください');$('joinCodeView').textContent=roomCode;show('joinCard')}
+$('newRace').onclick=()=>socket.emit('createRoom',{count:8},res=>{if(!res.ok)return err('ルームを作れませんでした');room=res.room;roomCode=room.code;mode='host';history.replaceState({},'',urlFor('host',roomCode));setupHost()});
+$('joinOpen').onclick=()=>$('joinBox').classList.remove('hidden');$('joinNext').onclick=openJoin;$('joinCode').onkeydown=e=>{if(e.key==='Enter')openJoin()};
+$('joinRace').onclick=()=>{const name=$('playerName').value.trim();if(!name)return err('名前を入力してください');const key='wd-token-'+roomCode;socket.emit('joinRoom',{code:roomCode,name,token:localStorage.getItem(key)||null},res=>{if(!res.ok)return err(res.error==='ROOM_FULL'?'満員です':'ルームが見つかりません');room=res.room;mySlot=res.slot;myToken=res.token;localStorage.setItem(key,myToken);localStorage.setItem(key+'-name',name);mode='player';history.replaceState({},'',urlFor('player',roomCode));setupPlayer()})};
+function setupHost(){show('host');$('raceView').classList.remove('hidden');$('roomCode').textContent=roomCode;$('joinUrl').textContent=urlFor('player',roomCode);$('screenUrl').textContent=urlFor('screen',roomCode);$('qr').innerHTML='';new QRCode($('qr'),{text:urlFor('player',roomCode),width:150,height:150,correctLevel:QRCode.CorrectLevel.M});renderHost();renderRace()}
+function setupScreen(){show('screenOnly');$('raceView').classList.remove('hidden');$('screenCode').textContent=roomCode;socket.emit('screenJoin',{code:roomCode},res=>{if(!res.ok)return err('ルームが見つかりません');room=res.room;renderRace()})}
 function setupPlayer(){show('player');$('pRoom').textContent=roomCode;$('connDot').classList.add('on');$('connText').textContent='接続済み';renderPlayer()}
-function setupScreen(){show('screenOnly');$('raceView').classList.remove('hidden');$('screenCode').textContent=roomCode;socket.emit('screenJoin',{code:roomCode},res=>{if(!res.ok)return err('ルームが見つかりません');room=res.room;init3D();renderRace();})}
-
-$('count').onchange=()=>socket.emit('hostConfig',{count:+$('count').value,names:[...document.querySelectorAll('#hostNames input')].map(x=>x.value)});
-$('startRace').onclick=()=>socket.emit('startRace');
-$('resetRace').onclick=()=>socket.emit('resetRace');
-$('full').onclick=()=>toggleFull();
-$('screenFull').onclick=()=>toggleFull();
-function toggleFull(){const s=$('stage');if(document.fullscreenElement)document.exitFullscreen();else s.requestFullscreen?.()}
-
-$('readyBtn').onclick=()=>{ready=!ready;socket.emit('ready',{ready});$('readyBtn').textContent=ready?'準備OK ✓':'準備OK';}
-$('tapBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(!room||room.status!=='running')return;pendingTaps++;localTaps++;$('tapCount').textContent=localTaps+'連打';});
-setInterval(()=>{if(pendingTaps>0&&mode==='player'){socket.emit('tapBatch',{count:pendingTaps});pendingTaps=0}},100);
-
-socket.on('connect',()=>{
- if(mode==='host'&&roomCode)socket.emit('hostJoin',{code:roomCode},res=>{if(res.ok){room=res.room;setupHost()}else{show('landing');err('前のルームは終了しています。新しく作成して')}}); 
- if(mode==='screen'&&roomCode)setupScreen();
-});
-socket.on('state',s=>{if(s.code!==roomCode)return;const before=room;room=s;if(mode==='host')renderHost();if(mode==='player')renderPlayer();if(mode==='screen'||mode==='host')renderRace(before);});
-socket.on('disconnect',()=>{if(mode==='player'){$('connDot').classList.remove('on');$('connText').textContent='再接続中'}});
-
-function renderHost(){
- if(!room)return;$('count').value=room.count;
- const box=$('hostNames');const active=document.activeElement;
- if(!box.children.length||box.children.length!==room.count){
-   box.innerHTML=room.horses.map((h,i)=>'<div class="nameRow"><b>'+(i+1)+(i===7?' 新婦':'')+'</b><input data-slot="'+i+'" value="'+escapeHtml(h.name)+'"><span id="rdy'+i+'" class="'+(h.ready?'ready':'notready')+'">'+(h.connected?(h.ready?'READY':'接続'):'空き')+'</span></div>').join('');
-   box.querySelectorAll('input').forEach(inp=>inp.onchange=()=>socket.emit('hostConfig',{names:[...box.querySelectorAll('input')].map(x=>x.value)}));
- } else {
-   room.horses.forEach((h,i)=>{const e=$('rdy'+i);if(e){e.className=h.ready?'ready':'notready';e.textContent=h.connected?(h.ready?'READY':'接続'):'空き';}});
- }
- const joined=room.horses.filter(h=>h.connected).length;$('joinedText').textContent=joined+'/'+room.count+'人 接続';
- $('startRace').disabled=room.status==='running'||room.status==='countdown';
-}
-function renderPlayer(){
- if(!room||mySlot==null)return;const h=room.horses[mySlot];if(!h)return;
- $('pNum').textContent=mySlot+1;$('pNum').style.background=colors[mySlot];$('pNum').style.color=mySlot===0||mySlot===4?'#111':'#fff';$('pName').textContent=h.name;
- $('pSt').textContent=Math.round(h.stamina)+'%';$('pFill').style.width=h.stamina+'%';$('pFill').style.background=h.stamina<25?'#df574e':h.stamina<55?'#d8a13e':'#59cb79';
- const rank=rankOf(mySlot);$('pRank').textContent='現在 '+(rank||'-')+'位';
- const running=room.status==='running'&&h.finish==null;$('tapBtn').disabled=!running;
- if(room.status==='lobby')$('pStatus').textContent=ready?'準備OK・発走待ち':'「準備OK」を押してください';
- else if(room.status==='countdown')$('pStatus').textContent='まもなく発走！';
- else if(room.status==='running')$('pStatus').textContent=room.elapsed>=10?'最後の直線！逆転チャンス！':'レース中！';
- else if(room.status==='finished'){$('pStatus').textContent='レース終了';const k=room.finishOrder.indexOf(mySlot)+1;$('pResult').textContent=k?'あなたは '+k+'着！':'';}
-}
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-
-// ---------- 3D broadcast ----------
-let renderer,scene,camera,clock3,horseModel,horseAnim,visuals=[],mixers=[],threeReady=false,lastFinishCount=0;
-const finishX=52,startX=-46;
-async function init3D(){
- if(threeReady)return;threeReady=true;
- renderer=new THREE.WebGLRenderer({canvas:$('canvas'),antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;
- scene=new THREE.Scene();scene.background=new THREE.Color(0xa9c3d0);scene.fog=new THREE.Fog(0xa9c3d0,75,185);
- camera=new THREE.PerspectiveCamera(28,1,.1,350);clock3=new THREE.Clock();
- scene.add(new THREE.HemisphereLight(0xffffff,0x315c37,2.4));const sun=new THREE.DirectionalLight(0xffffff,2.5);sun.position.set(-20,40,25);sun.castShadow=true;scene.add(sun);
- makeCourse();resize3();addEventListener('resize',resize3);
- $('commentary').textContent='3D競走馬モデルを読み込み中…';
- try{
-   const gltf=await new GLTFLoader().loadAsync('https://threejs.org/examples/models/gltf/Horse.glb');
-   horseModel=gltf.scene;horseAnim=gltf.animations[0];
-   $('commentary').textContent='各馬ゲート入り。まもなく発走です。';
-   rebuildHorses();
- }catch(e){$('commentary').textContent='3D馬モデルの読み込みに失敗しました。通信を確認してください。';console.error(e)}
- animate3();
-}
-
-function centerPoint(progress){
-  const p=Math.max(0,Math.min(100,progress));
-  if(p<=34){
-    const t=p/34;
-    return new THREE.Vector3(-52 + 68*t, 0.03 + 0.25*Math.sin(t*Math.PI), 13.5);
-  }
-  if(p<=66){
-    const t=(p-34)/32;
-    const th=t*Math.PI;
-    return new THREE.Vector3(16 + 20*Math.sin(th), 0.05 + 0.18*Math.sin(th), 13.5*Math.cos(th));
-  }
-  const t=(p-66)/34;
-  return new THREE.Vector3(16 - 76*t, 0.05 + 0.45*Math.sin(t*Math.PI), -13.5);
-}
-function lanePoint(progress,lane){
-  const p=centerPoint(progress);
-  const p2=centerPoint(Math.min(100,progress+.25));
-  const tan=p2.clone().sub(p).normalize();
-  const side=new THREE.Vector3(-tan.z,0,tan.x).normalize();
-  const spread=(lane-(room?.count-1||7)/2)*1.95;
-  return p.add(side.multiplyScalar(spread));
-}
-function tangentAt(progress){
-  return centerPoint(Math.min(100,progress+.35)).sub(centerPoint(Math.max(0,progress-.35))).normalize();
-}
-function makeCourse(){
- const mat=(col,r=1)=>new THREE.MeshStandardMaterial({color:col,roughness:r});
- // Build a wide ribbon following the backstretch, sweeping turn and home straight.
- const samples=220, halfW=17.5, verts=[], uvs=[], idx=[];
- for(let i=0;i<=samples;i++){
-   const pr=100*i/samples, cp=centerPoint(pr), t=tangentAt(pr), side=new THREE.Vector3(-t.z,0,t.x).normalize();
-   const a=cp.clone().add(side.clone().multiplyScalar(halfW));
-   const b=cp.clone().add(side.clone().multiplyScalar(-halfW));
-   verts.push(a.x,a.y,a.z,b.x,b.y,b.z);uvs.push(i/14,0,i/14,1);
-   if(i<samples){const k=i*2;idx.push(k,k+1,k+2,k+1,k+3,k+2)}
- }
- const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.setIndex(idx);g.computeVertexNormals();
- const turf=new THREE.Mesh(g,mat(0x397e46,.96));turf.receiveShadow=true;scene.add(turf);
- // Mowing bands across the racing surface
- for(let pr=3;pr<100;pr+=5){
-   const cp=centerPoint(pr), t=tangentAt(pr), side=new THREE.Vector3(-t.z,0,t.x).normalize();
-   const band=new THREE.Mesh(new THREE.PlaneGeometry(35,3.2),new THREE.MeshBasicMaterial({color:(Math.floor(pr/5)%2?0x4a9155:0x327540),transparent:true,opacity:.18,side:THREE.DoubleSide}));
-   band.rotation.x=-Math.PI/2;band.rotation.z=Math.atan2(t.z,t.x);band.position.copy(cp);band.position.y+=.025;scene.add(band);
- }
- // Rails on both edges
- const railMat=mat(0xf6f6f6,.55);
- [-18.1,18.1].forEach(off=>{
-   const pts=[];
-   for(let i=0;i<=150;i++){const pr=100*i/150, cp=centerPoint(pr),t=tangentAt(pr),side=new THREE.Vector3(-t.z,0,t.x).normalize();pts.push(cp.add(side.multiplyScalar(off)).add(new THREE.Vector3(0,1.0,0)))}
-   const curve=new THREE.CatmullRomCurve3(pts,false,'centripetal');
-   const rail=new THREE.Mesh(new THREE.TubeGeometry(curve,240,.10,7,false),railMat);scene.add(rail);
-   for(let i=0;i<=60;i++){const pr=100*i/60,cp=centerPoint(pr),t=tangentAt(pr),side=new THREE.Vector3(-t.z,0,t.x).normalize();const pp=cp.add(side.multiplyScalar(off));const post=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,1.8,6),railMat);post.position.set(pp.x,.9,pp.z);scene.add(post)}
- });
- // Infield
- const infield=new THREE.Mesh(new THREE.CircleGeometry(20,72),mat(0x2d6d3c,1));infield.rotation.x=-Math.PI/2;infield.position.set(17,-.03,0);infield.scale.set(1.2,.72,1);scene.add(infield);
- // Grandstand along home straight
- const stand=new THREE.Mesh(new THREE.BoxGeometry(100,12,15),mat(0x66777f,.9));stand.position.set(-18,6,-34);scene.add(stand);
- const roof=new THREE.Mesh(new THREE.BoxGeometry(108,.7,20),mat(0xd6dce0,.65));roof.position.set(-18,12.4,-34);scene.add(roof);
- for(let i=0;i<20;i++){const row=new THREE.Mesh(new THREE.BoxGeometry(92,.15,.35),new THREE.MeshBasicMaterial({color:i%2?0xb8c1c5:0x8b999e}));row.position.set(-18,2+i*.38,-26.7-i*.22);scene.add(row)}
- // Distance posts and finish
- for(const pr of [72,80,88,94]){
-   const cp=centerPoint(pr), t=tangentAt(pr), side=new THREE.Vector3(-t.z,0,t.x).normalize(), pp=cp.clone().add(side.multiplyScalar(-18.5));
-   const post=new THREE.Mesh(new THREE.BoxGeometry(.45,4,.45),railMat);post.position.set(pp.x,2,pp.z);scene.add(post);
- }
- const fp=centerPoint(100), ft=tangentAt(99.5), fs=new THREE.Vector3(-ft.z,0,ft.x).normalize();
- const finishLine=new THREE.Mesh(new THREE.PlaneGeometry(36,.28),new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));finishLine.rotation.x=-Math.PI/2;finishLine.rotation.z=Math.atan2(ft.z,ft.x)+Math.PI/2;finishLine.position.set(fp.x,.035,fp.z);scene.add(finishLine);
- // trees / skyline depth
- for(let i=0;i<35;i++){const tr=new THREE.Mesh(new THREE.ConeGeometry(1.3+Math.random(),4+Math.random()*3,8),mat(0x285b35,.95));tr.position.set(-70+Math.random()*145,2,-48-Math.random()*10);scene.add(tr)}
-}
-function resize3(){if(!renderer)return;const b=$('stage').getBoundingClientRect();renderer.setSize(b.width,b.height,false);camera.aspect=b.width/b.height;camera.updateProjectionMatrix()}
-
-function makeNumberSprite(number,bride=false){
- const cv=document.createElement('canvas');cv.width=256;cv.height=256;const ctx=cv.getContext('2d');
- ctx.clearRect(0,0,256,256);
- ctx.beginPath();ctx.arc(128,128,102,0,Math.PI*2);
- ctx.fillStyle='rgba(255,255,255,.98)';ctx.fill();
- ctx.lineWidth=18;ctx.strokeStyle=bride?'#d5b05c':'#111';ctx.stroke();
- ctx.fillStyle='#111';ctx.font='900 150px Arial, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(number),128,138);
- const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;
- const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
- sp.scale.set(1.55,1.55,1.55);sp.position.set(0,4.2,0);sp.renderOrder=999;
- return sp;
-}
-function rebuildHorses(){
- if(!scene||!horseModel||!room)return;visuals.forEach(v=>scene.remove(v.group));visuals=[];mixers=[];
- room.horses.forEach((h,i)=>{
-   const group=new THREE.Group();const model=horseModel.clone(true);
-   const box0=new THREE.Box3().setFromObject(model), size=new THREE.Vector3();box0.getSize(size);const scale=2.65/Math.max(.001,size.y);model.scale.setScalar(scale);
-   const box1=new THREE.Box3().setFromObject(model);model.position.y=-box1.min.y;model.rotation.y=Math.PI/2;group.add(model);
-   const isBride=!!h.bride||(i===7);
-   const isFemale=!!h.female||[1,4,7].includes(i);
-   const riderColor=isBride?0xffffff:new THREE.Color(colors[i]);
-   const clothMat=new THREE.MeshStandardMaterial({color:riderColor,roughness:.6});
-   const saddle=new THREE.Mesh(new THREE.BoxGeometry(1.1,.16,.82),new THREE.MeshStandardMaterial({color:new THREE.Color(colors[i]),roughness:.65}));saddle.position.set(-.1,2.0,0);group.add(saddle);
-   if(isBride){
-     const dressMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.72,side:THREE.DoubleSide});
-     const skirt=new THREE.Mesh(new THREE.CylinderGeometry(.34,.82,1.18,18),dressMat);skirt.position.set(-.02,2.27,0);skirt.rotation.z=-.17;group.add(skirt);
-     const bodice=new THREE.Mesh(new THREE.CylinderGeometry(.20,.29,.68,12),dressMat);bodice.position.set(.08,2.72,0);bodice.rotation.z=-.2;group.add(bodice);
-     const veilMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.72,side:THREE.DoubleSide,depthWrite:false});
-     const veil=new THREE.Mesh(new THREE.PlaneGeometry(.95,1.18),veilMat);veil.position.set(-.28,3.05,.02);veil.rotation.set(0,Math.PI/2,-.34);group.add(veil);
-   }else{
-     const body=new THREE.Mesh(new THREE.CylinderGeometry(.22,.30,.75,10),clothMat);body.rotation.z=-.25;body.position.set(.05,2.48,0);group.add(body);
-   }
-   const head=new THREE.Mesh(new THREE.SphereGeometry(.19,12,8),new THREE.MeshStandardMaterial({color:0xe0ac84}));head.position.set(.22,2.91,0);group.add(head);
-   const helmet=new THREE.Mesh(new THREE.SphereGeometry(.22,12,8),clothMat);helmet.scale.y=.62;helmet.position.set(.22,3.05,0);group.add(helmet);
-   if(isFemale){
-     const hairMat=new THREE.MeshStandardMaterial({color:0x231914,roughness:.9});
-     const hair=new THREE.Mesh(new THREE.SphereGeometry(.21,12,8),hairMat);hair.scale.set(1,.95,.72);hair.position.set(.10,2.94,-.10);group.add(hair);
-   }
-   group.add(makeNumberSprite(i+1,isBride));
-   const ip=lanePoint(0,i);group.position.copy(ip);const it=tangentAt(0);group.rotation.y=-Math.atan2(it.z,it.x);scene.add(group);
-   const mixer=new THREE.AnimationMixer(model);if(horseAnim)mixer.clipAction(horseAnim).setDuration(.72).play();mixers.push(mixer);visuals.push({group,mixer});
- });
-}
-function renderRace(prev){
- if(!room)return;if(threeReady&&horseModel&&visuals.length!==room.count)rebuildHorses();
- const sorted=[...room.horses].sort((a,b)=>{if(a.finish!=null&&b.finish!=null)return a.finish-b.finish;if(a.finish!=null)return -1;if(b.finish!=null)return 1;return b.progress-a.progress});
- $('leader').innerHTML=sorted.slice(0,5).map((h,i)=>'<div class="leadRow"><b>'+(i+1)+'</b><i class="cloth" style="background:'+colors[h.slot]+'"></i><span>'+escapeHtml(h.name)+'</span></div>').join('');
- $('phase').textContent=room.status==='lobby'?'発走前':room.status==='countdown'?'発走準備':room.status==='running'?(room.elapsed>=10?'最後の直線':'レース中'):'確定';
- $('commentary').textContent=callText(sorted);
- if(room.status==='countdown'){const n=Math.max(1,Math.ceil((room.startAt-Date.now())/1000));$('countdown').textContent=n;$('countdown').classList.remove('hidden')}else $('countdown').classList.add('hidden');
- if(room.finishOrder.length>lastFinishCount){lastFinishCount=room.finishOrder.length;$('finishFlash').classList.remove('show');void $('finishFlash').offsetWidth;$('finishFlash').classList.add('show')}
- if(room.status==='lobby'){lastFinishCount=0;$('screenResult').classList.add('hidden')}
- if(room.status==='finished'){$('screenResult').classList.remove('hidden');$('screenResult').textContent='🏆 着順確定\n'+room.finishOrder.map((s,i)=>(i+1)+'着 '+room.horses[s].name+'　'+room.horses[s].finish.toFixed(2)+'秒').join('\n')}
-
- const vid=$('cinematic'), winner=$('winnerOverlay');
- if(vid){
-   if(room.status==='countdown'){try{vid.pause();vid.currentTime=0;}catch(e){};if(winner)winner.classList.add('hidden');}
-   if(room.status==='running'){
-     const desired=Math.max(0,Math.min(14.1,room.elapsed||0));
-     if(Math.abs((vid.currentTime||0)-desired)>.75){try{vid.currentTime=desired}catch(e){}}
-     if(vid.paused)vid.play().catch(()=>{});
-     if(winner)winner.classList.add('hidden');
-   }
-   if(room.status==='finished'){
-     vid.pause();
-     const ws=room.finishOrder[0];
-     if(ws!=null&&winner){$('winnerNum').textContent=ws+1;$('winnerName').textContent=room.horses[ws].name;winner.classList.remove('hidden');}
-   }
-   if(room.status==='lobby'){vid.pause();try{vid.currentTime=0}catch(e){};if(winner)winner.classList.add('hidden');}
- }
-}
-function callText(sorted){
- if(!room)return'';const a=sorted[0]?.name||'',b=sorted[1]?.name||'';
- if(room.status==='lobby')return '各馬ゲート入り。参加者の準備を待っています。';
- if(room.status==='countdown')return 'まもなくスタート！';
- if(room.status==='finished')return '全頭ゴール。着順確定です。';
- const e=room.elapsed||0;if(e<2.5)return 'スタートしました！ 各馬一斉に飛び出します。';if(e<6)return '先頭は'+a+'。'+b+'が続き、馬群は向正面を進みます。';if(e<10)return '3・4コーナーへ。中団・後方からも進出。';return '最後の直線！ '+a+'先頭、'+b+'が追う！ ゴールまで一気に駆け抜けます！';
-}
-function animate3(){
- requestAnimationFrame(animate3);if(!renderer||!scene||!camera)return;const dt=Math.min(.05,clock3.getDelta());
- const running=room?.status==='running';mixers.forEach(m=>{m.timeScale=running?1.32:.28;m.update(dt)});
- if(room&&visuals.length===room.count){
-   room.horses.forEach((h,i)=>{
-     const v=visuals[i], target=lanePoint(h.progress,i), tan=tangentAt(h.progress);
-     v.group.position.lerp(target,.22);
-     const yaw=-Math.atan2(tan.z,tan.x);
-     let d=yaw-v.group.rotation.y;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;v.group.rotation.y+=d*.16;
-   });
-   const leader=Math.max(0,...room.horses.map(h=>h.progress)), lp=centerPoint(leader), lt=tangentAt(leader), side=new THREE.Vector3(-lt.z,0,lt.x).normalize(), e=room.elapsed||0;
-   let pos,look,name;
-   if(room.status==='lobby'||room.status==='countdown'){
-     const sp=centerPoint(0),st=tangentAt(0),ss=new THREE.Vector3(-st.z,0,st.x).normalize();
-     pos=sp.clone().add(ss.multiplyScalar(25)).add(new THREE.Vector3(-6,8,0));look=sp.clone().add(st.multiplyScalar(9)).add(new THREE.Vector3(0,1.2,0));name='CAM 1　スタート地点';
-   } else if(leader<32){
-     // long telephoto side tracking down the backstretch
-     pos=lp.clone().add(side.multiplyScalar(27)).add(new THREE.Vector3(-7,7.5,0));look=lp.clone().add(lt.multiplyScalar(7)).add(new THREE.Vector3(0,1.1,0));name='CAM 2　向正面・横追い';
-   } else if(leader<53){
-     // high sweeping third-corner shot
-     pos=lp.clone().add(side.multiplyScalar(31)).add(new THREE.Vector3(0,13,0));look=lp.clone().add(lt.multiplyScalar(5)).add(new THREE.Vector3(0,1,0));name='CAM 3　3コーナー';
-   } else if(leader<68){
-     // compressed field through fourth turn
-     pos=lp.clone().add(side.multiplyScalar(24)).add(new THREE.Vector3(-5,9,0));look=lp.clone().add(lt.multiplyScalar(9)).add(new THREE.Vector3(0,1,0));name='CAM 4　4コーナー';
-   } else if(leader<91){
-     // classic home-straight side telephoto
-     pos=lp.clone().add(side.multiplyScalar(29)).add(new THREE.Vector3(-9,7,0));look=lp.clone().add(lt.multiplyScalar(11)).add(new THREE.Vector3(0,1.05,0));name='CAM 5　最後の直線';
-   } else {
-     // fixed finish camera, slightly down-track and outside
-     const fp=centerPoint(100),ft=tangentAt(99),fs=new THREE.Vector3(-ft.z,0,ft.x).normalize();
-     pos=fp.clone().add(fs.multiplyScalar(25)).add(ft.clone().multiplyScalar(5)).add(new THREE.Vector3(0,8,0));look=fp.clone().add(ft.clone().multiplyScalar(-9)).add(new THREE.Vector3(0,1,0));name='CAM 6　ゴール前';
-   }
-   camera.position.lerp(pos,.06);camera.lookAt(look);$('cameraName').textContent=name;
- }
- renderer.render(scene,camera);
-}
-
-if(mode==='player'&&roomCode)openJoinName();
-else if(mode==='screen'&&roomCode){show('screenOnly');}
-else if(mode==='host'&&roomCode){show('host');$('raceView').classList.remove('hidden');}
-else show('landing');
+$('count').onchange=()=>socket.emit('hostConfig',{count:+$('count').value,names:[...document.querySelectorAll('#hostNames input')].map(x=>x.value)});$('startRace').onclick=()=>socket.emit('startRace');$('resetRace').onclick=()=>socket.emit('resetRace');$('fullBtn').onclick=$('screenFull').onclick=()=>document.fullscreenElement?document.exitFullscreen():$('stage').requestFullscreen?.();
+$('readyBtn').onclick=()=>{ready=!ready;socket.emit('ready',{ready});$('readyBtn').textContent=ready?'準備OK ✓':'準備OK'};
+$('tapBtn').addEventListener('pointerdown',e=>{e.preventDefault();if(!room||room.status!=='running')return;pendingTaps++;localTaps++;$('tapCount').textContent=localTaps+'連打'});setInterval(()=>{if(pendingTaps&&mode==='player'){socket.emit('tapBatch',{count:pendingTaps});pendingTaps=0}},100);
+socket.on('connect',()=>{if(mode==='host'&&roomCode)socket.emit('hostJoin',{code:roomCode},res=>{if(res.ok){room=res.room;setupHost()}else{mode='landing';show('landing');err('前のルームは終了しています')}});else if(mode==='screen'&&roomCode)setupScreen();else if(mode==='player'&&roomCode){const key='wd-token-'+roomCode,name=localStorage.getItem(key+'-name');if(name)socket.emit('joinRoom',{code:roomCode,name,token:localStorage.getItem(key)},res=>{if(res.ok){room=res.room;mySlot=res.slot;myToken=res.token;setupPlayer()}else{$('joinCodeView').textContent=roomCode;show('joinCard')}});else{$('joinCodeView').textContent=roomCode;show('joinCard')}}});
+socket.on('state',state=>{if(state.code!==roomCode)return;room=state;if(mode==='host')renderHost();if(mode==='player')renderPlayer();if(mode==='host'||mode==='screen')renderRace()});socket.on('disconnect',()=>{if(mode==='player'){$('connDot').classList.remove('on');$('connText').textContent='再接続中'}});
+function renderHost(){if(!room)return;$('count').value=room.count;const box=$('hostNames');if(box.children.length!==room.count){box.innerHTML=room.horses.map((h,i)=>`<div class="nameRow"><span class="numMini" style="background:${COLORS[i]};color:${TEXT[i]}">${i+1}</span><input data-slot="${i}" value="${esc(h.name)}" maxlength="14"><span id="hs${i}" class="statusTag">空き</span></div>`).join('');box.querySelectorAll('input').forEach(inp=>inp.onchange=()=>socket.emit('hostConfig',{names:[...box.querySelectorAll('input')].map(x=>x.value)}))}room.horses.forEach((h,i)=>{const e=$('hs'+i);if(!e)return;e.className='statusTag'+(h.ready?' ready':'');e.textContent=h.connected?(h.ready?'READY':'接続'):'空き'});$('joinedText').textContent=room.horses.filter(h=>h.connected).length+'/'+room.count+'人 接続';$('startRace').disabled=['countdown','running'].includes(room.status)}
+function renderPlayer(){if(!room||mySlot==null)return;const h=room.horses[mySlot];if(!h)return;$('pNum').textContent=mySlot+1;$('pNum').style.background=COLORS[mySlot];$('pNum').style.color=TEXT[mySlot];$('pName').textContent=h.name;$('pBride').textContent=h.bride?'BRIDE・新婦':'';$('pSt').textContent=Math.round(h.stamina)+'%';$('pFill').style.width=h.stamina+'%';$('pFill').style.background=h.stamina<25?'#df574e':h.stamina<55?'#d7a03d':'#5dcc7b';$('pRank').textContent='現在 '+(rankOf(mySlot)||'−')+'位';const running=room.status==='running'&&h.finish==null;$('tapBtn').disabled=!running;if(room.status==='lobby')$('pStatus').textContent=ready?'準備OK・発走待ち':'「準備OK」を押してください';else if(room.status==='countdown')$('pStatus').textContent='まもなく発走！';else if(room.status==='running')$('pStatus').textContent=room.elapsed>=10?'最後の直線！逆転チャンス！':'レース中！';else{$('pStatus').textContent='レース終了';const k=room.finishOrder.indexOf(mySlot)+1;$('pResult').textContent=k?'あなたは '+k+'着！':''}}
+function commentary(sorted){if(!room)return'';const a=sorted[0]?.name||'',b=sorted[1]?.name||'';if(room.status==='lobby')return'各馬ゲート入り。参加者の準備を待っています。';if(room.status==='countdown')return'まもなくスタート！';if(room.status==='finished')return'全頭ゴール。着順確定です。';const e=room.elapsed||0;if(e<2.5)return'スタートしました！ 各馬一斉に飛び出します。';if(e<6)return'先頭は'+a+'。'+b+'が続き、向正面を進みます。';if(e<10)return'3・4コーナーへ。後方勢も進出開始。';return'最後の直線！ '+a+'先頭、'+b+'が追う！'}
+function renderRace(){if(!room)return;const sorted=rankList();$('phase').textContent=room.status==='lobby'?'発走前':room.status==='countdown'?'発走準備':room.status==='running'?(room.elapsed>=10?'最後の直線':'レース中'):'確定';$('leaderboard').innerHTML=sorted.map((h,i)=>`<div class="leadRow"><span class="leadNo" style="background:${COLORS[h.slot]};color:${TEXT[h.slot]}">${h.slot+1}</span><b>${i+1}位　${esc(h.name)}${h.bride?' <span class="bride">新婦</span>':''}</b><span>${Math.round(h.progress)}%</span></div>`).join('');$('commentary').textContent=commentary(sorted);$('runnerDots').innerHTML=room.horses.map(h=>`<div class="runnerDot${h.bride?' brideDot':''}" style="left:calc(24px + (100% - 48px) * ${Math.max(0,Math.min(100,h.progress))/100});background:${COLORS[h.slot]};color:${TEXT[h.slot]}">${h.slot+1}</div>`).join('');if(room.status==='countdown'){const n=Math.max(1,Math.ceil((room.startAt-Date.now())/1000));$('countdown').textContent=n;$('countdown').classList.remove('hidden')}else $('countdown').classList.add('hidden');syncFilm();if(room.status==='finished'){const w=room.finishOrder[0];$('winnerNo').textContent=w+1;$('winnerNo').style.color=COLORS[w];$('winnerName').textContent=room.horses[w].name;$('finishList').innerHTML=room.finishOrder.map((slot,i)=>`${i+1}着　<span style="display:inline-block;width:29px;border-radius:5px;background:${COLORS[slot]};color:${TEXT[slot]}">${slot+1}</span>　${esc(room.horses[slot].name)}`).join('<br>');$('winner').classList.remove('hidden')}else $('winner').classList.add('hidden')}
+function syncFilm(){const film=$('raceFilm'),poster=$('racePoster');if(room.status==='lobby'){film.pause();filmStarted=false;poster.classList.remove('moving');try{film.currentTime=0}catch{};return}if(room.status==='countdown'){film.pause();filmStarted=false;poster.classList.remove('moving');void poster.offsetWidth;poster.classList.add('moving');try{film.currentTime=0}catch{};return}if(room.status==='running'){poster.classList.add('moving');if(CINEMATIC_URL){film.classList.remove('hidden');const desired=Math.min(14.4,Math.max(0,room.elapsed||0));if(Math.abs(film.currentTime-desired)>.8)try{film.currentTime=desired}catch{};if(film.paused)film.play().catch(()=>{})}}else if(room.status==='finished'){film.pause()}}
+if(mode==='screen'&&roomCode){show('screenOnly');$('raceView').classList.remove('hidden')}else if(mode==='host'&&roomCode){show('host');$('raceView').classList.remove('hidden')}else if(mode==='player'&&roomCode){$('joinCodeView').textContent=roomCode;show('joinCard')}else show('landing');
+})();
 </script>
 </body>
 </html>
