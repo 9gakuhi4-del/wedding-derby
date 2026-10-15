@@ -24,7 +24,7 @@ function makeHorse(i) {
   const number=i+1;
   const female=[2,5,8].includes(number);
   const bride=number===8;
-  return { slot:i, name:bride?'新婦':`ゲスト${number}`, female, bride, token:null, socketId:null, ready:false, progress:0, stamina:100, finish:null, tapQueue:0, lastTapAt:0 };
+  return { slot:i, name:bride?'新婦':`ゲスト${number}`, female, bride, token:null, socketId:null, ready:false, progress:0, stamina:100, finish:null, tapQueue:0, lastTapAt:0, speed:0, effort:0, taps:0 };
 }
 function publicRoom(r) {
   return {
@@ -32,7 +32,7 @@ function publicRoom(r) {
     finishOrder:r.finishOrder.slice(), hostConnected:!!r.hostId,
     horses:r.horses.map(h=>({
       slot:h.slot,name:h.name,ready:h.ready,connected:!!h.socketId,
-      progress:+h.progress.toFixed(3),stamina:+h.stamina.toFixed(1),finish:h.finish,female:!!h.female,bride:!!h.bride
+      progress:+h.progress.toFixed(3),stamina:+h.stamina.toFixed(1),speed:+h.speed.toFixed(2),taps:h.taps,finish:h.finish,female:!!h.female,bride:!!h.bride
     }))
   };
 }
@@ -43,7 +43,7 @@ function normalizeName(name, fallback) {
 }
 function resetRace(r) {
   r.status='lobby'; r.startAt=null; r.elapsed=0; r.finishOrder=[];
-  for (const h of r.horses) { h.progress=0; h.stamina=100; h.finish=null; h.tapQueue=0; }
+  for (const h of r.horses) { h.progress=0; h.stamina=100; h.finish=null; h.tapQueue=0; h.speed=0; h.effort=0; h.taps=0; h.lastTapAt=0; }
 }
 function setCount(r,n) {
   n=[6,8,9].includes(+n)?+n:8;
@@ -122,7 +122,7 @@ io.on('connection', socket => {
     const h=r.horses[d.slot]; if(!h||h.token!==d.token||h.finish!=null) return;
     const now=Date.now(); const safe=Math.max(0,Math.min(12,Math.floor(+count||0)));
     if(now-h.lastTapAt<35 && safe>4) return;
-    h.lastTapAt=now; h.tapQueue=Math.min(30,h.tapQueue+safe);
+    h.lastTapAt=now; h.tapQueue=Math.min(12,h.tapQueue+safe);
   });
 
   socket.on('disconnect', () => {
@@ -133,34 +133,36 @@ io.on('connection', socket => {
   });
 });
 
-let prev=Date.now();
+// Fixed 50ms authoritative simulation; every display uses these positions.
+// No random outcomes, slot bonuses or late-race automatic acceleration.
+function stepRace(r,dt) {
+  r.elapsed+=dt;
+  const finishers=[];
+  for(const h of r.horses) {
+    if(h.finish!=null) continue;
+    const taps=Math.min(h.tapQueue,1); h.tapQueue-=taps; h.taps+=taps;
+    h.effort=Math.max(0,h.effort-dt*1.8);
+    if(taps) h.effort=Math.min(1,h.effort+.32);
+    h.stamina=Math.max(0,Math.min(100,h.stamina+dt*(h.effort>.35?-8*h.effort:5)));
+    const strength=.38+.62*Math.min(1,h.stamina/30);
+    const target=(2.3+2.6*h.effort)*strength;
+    h.speed+=(target-h.speed)*Math.min(1,dt*3);
+    const old=h.progress; h.progress=Math.min(100,old+h.speed*dt);
+    if(h.progress>=100){h.finish=r.elapsed-dt+(100-old)/h.speed;finishers.push(h);}
+  }
+  finishers.sort((a,b)=>a.finish-b.finish||a.slot-b.slot);
+  for(const h of finishers)r.finishOrder.push(h.slot);
+  if(r.horses.every(h=>h.finish!=null))r.status='finished';
+}
+
+
 setInterval(()=>{
-  const now=Date.now(), dt=Math.min(.2,(now-prev)/1000); prev=now;
   for(const r of rooms.values()) {
     if(r.status!=='running') continue;
-    r.elapsed=Math.max(0,(now-r.startAt)/1000);
-    const sprint=r.elapsed>=10;
-    for(const h of r.horses) {
-      if(h.finish!=null) continue;
-      h.stamina=Math.min(100,h.stamina+dt*(sprint?2.7:4.2));
-      const base=(4.15 + (h.slot%3)*0.08) * (h.stamina<12?0.72:1);
-      h.progress += dt*base*(sprint?1.10:1);
-      const taps=Math.min(h.tapQueue,8); h.tapQueue-=taps;
-      if(taps>0) {
-        const eff=h.stamina<12?0.30:h.stamina<35?0.62:1;
-        h.progress += taps * 0.42 * eff * (sprint?1.72:1);
-        h.stamina=Math.max(0,h.stamina-taps*(sprint?1.28:1.0));
-      }
-      if(r.elapsed>15) h.progress += dt*5.0;
-      if(r.elapsed>17) h.progress += dt*10.0;
-      if(h.progress>=100) {
-        h.progress=100; h.finish=+(r.elapsed.toFixed(2)); r.finishOrder.push(h.slot);
-      }
-    }
-    if(r.horses.every(h=>h.finish!=null)) r.status='finished';
+    stepRace(r, .05);
     emitRoom(r);
   }
-},100);
+},50);
 
 setInterval(()=>{
   const cut=Date.now()-1000*60*45;
