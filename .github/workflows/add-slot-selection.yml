@@ -1,0 +1,60 @@
+name: Add participant horse selection
+on:
+  push:
+    paths:
+      - '.github/workflows/add-slot-selection.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch server and frontend
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('server.js')
+          s=p.read_text()
+          s=s.replace("progress:+h.progress.toFixed(3),stamina:+h.stamina.toFixed(1),finish:h.finish,female:!!h.female,bride:!!h.bride", "progress:+h.progress.toFixed(3),stamina:+h.stamina.toFixed(1),finish:h.finish,female:!!h.female,bride:!!h.bride,claimed:!!h.token")
+          s=s.replace("socket.on('joinRoom', ({code:c,name,token}={},cb=()=>{}) => {", "socket.on('joinRoom', ({code:c,name,token,slot}={},cb=()=>{}) => {")
+          old="""    let h = token ? r.horses.find(x=>x.token===token) : null;
+    if(!h) h=r.horses.find(x=>!x.token);
+    if(!h) return cb({ok:false,error:'ROOM_FULL'});"""
+          new="""    let h = token ? r.horses.find(x=>x.token===token) : null;
+    if(!h && slot !== undefined && slot !== null && slot !== '') {
+      const requested=Number(slot);
+      if(!Number.isInteger(requested) || requested<0 || requested>=r.horses.length) return cb({ok:false,error:'INVALID_SLOT'});
+      h=r.horses[requested];
+      if(h.token) return cb({ok:false,error:'SLOT_TAKEN'});
+    }
+    if(!h) h=r.horses.find(x=>!x.token);
+    if(!h) return cb({ok:false,error:'ROOM_FULL'});"""
+          if old not in s: raise SystemExit('server join block not found')
+          s=s.replace(old,new)
+          p.write_text(s)
+
+          p=Path('public/index.html')
+          s=p.read_text()
+          old='<input id="playerName" class="full" maxlength="14" placeholder="馬名・出席者名" style="margin:10px 0"><button id="joinRace" class="btn large full">この名前で出走登録</button>'
+          new='<select id="horseSlot" class="full" style="margin:10px 0"></select><input id="playerName" class="full" maxlength="14" placeholder="馬名・出席者名" style="margin:0 0 10px"><button id="joinRace" class="btn large full">この馬で出走登録</button>'
+          if old not in s: raise SystemExit('join controls not found')
+          s=s.replace(old,new)
+          old="function openJoin(){roomCode=$('joinCode').value.trim().toUpperCase();if(roomCode.length!==5)return err('5文字のルームコードを入力してください');$('joinCodeView').textContent=roomCode;show('joinCard')}"
+          new="function openJoin(){roomCode=$('joinCode').value.trim().toUpperCase();if(roomCode.length!==5)return err('5文字のルームコードを入力してください');socket.emit('screenJoin',{code:roomCode},res=>{if(!res.ok)return err('ルームが見つかりません');room=res.room;$('joinCodeView').textContent=roomCode;const available=room.horses.filter(h=>!h.claimed);$('horseSlot').innerHTML=available.map(h=>'<option value=\"'+h.slot+'\">'+(h.slot+1)+'番　'+esc(h.name)+(h.bride?'（新婦）':'')+'</option>').join('');if(!available.length)return err('満員です');show('joinCard')})}"
+          if old not in s: raise SystemExit('openJoin not found')
+          s=s.replace(old,new)
+          old="socket.emit('joinRoom',{code:roomCode,name,token:localStorage.getItem(key)||null},res=>{if(!res.ok)return err(res.error==='ROOM_FULL'?'満員です':'ルームが見つかりません');"
+          new="socket.emit('joinRoom',{code:roomCode,name,token:localStorage.getItem(key)||null,slot:+$('horseSlot').value},res=>{if(!res.ok)return err(res.error==='SLOT_TAKEN'?'その馬は別の方が選びました。入り直してください':res.error==='ROOM_FULL'?'満員です':'ルームが見つかりません');"
+          if old not in s: raise SystemExit('join emit not found')
+          s=s.replace(old,new)
+          p.write_text(s)
+          PY
+      - name: Commit changes
+        run: |
+          git config user.name "wedding-derby-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add server.js public/index.html
+          git commit -m "Let participants choose their horse number" || exit 0
+          git push
