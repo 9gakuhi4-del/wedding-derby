@@ -15,7 +15,7 @@ input,select{background:#081f17;color:#fff;border:1px solid #476b59;border-radiu
 .code{font:900 28px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.13em;color:#ffe1a1}.tiny{font-size:11px;color:var(--muted)}.statusDot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:#888}.statusDot.on{background:#55d77b;box-shadow:0 0 10px #55d77b}
 .names{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:7px;margin-top:10px}.nameRow{display:flex;gap:6px;align-items:center}.nameRow b{width:22px}.nameRow input{min-width:0;width:100%}.ready{font-size:10px;padding:3px 6px;border-radius:99px;background:#493}.notready{background:#555}
 #stage{height:min(62vw,650px);min-height:390px;position:relative;overflow:hidden;border-radius:16px;border:2px solid #a88951;background:#adc5d0;box-shadow:0 20px 50px #0008}.stageFull{height:100vh!important;border-radius:0!important;border:0!important}
-#canvas{width:100%;height:100%;display:block}.hud{position:absolute;inset:0;pointer-events:none}.shadeTop{position:absolute;left:0;right:0;top:0;height:100px;background:linear-gradient(#04100bd9,transparent)}
+#cinematic{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;z-index:0}#canvas{position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;opacity:.05;pointer-events:none}.hud{position:absolute;inset:0;pointer-events:none}.shadeTop{position:absolute;left:0;right:0;top:0;height:100px;background:linear-gradient(#04100bd9,transparent)}
 .top{position:absolute;top:9px;left:10px;right:10px;display:flex;justify-content:space-between;gap:8px}.pill{background:#071c14df;border:1px solid #ffffff25;border-radius:8px;padding:6px 9px;font-size:11px;font-weight:900;backdrop-filter:blur(5px)}.live:before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#f23;margin-right:6px;box-shadow:0 0 9px #f23}
 .cam{position:absolute;top:48px;left:10px}.leader{position:absolute;top:48px;right:10px;width:min(210px,40%);background:#061a12e8;border:1px solid #ffffff25;border-radius:10px;padding:7px;backdrop-filter:blur(5px)}.leadRow{display:grid;grid-template-columns:20px 13px 1fr;gap:5px;align-items:center;padding:3px 0;font-size:11px;border-bottom:1px solid #ffffff12}.leadRow:last-child{border:0}.cloth{height:13px;border:1px solid #ffffff99;border-radius:2px}
 .commentary{position:absolute;left:10px;bottom:10px;max-width:78%;background:#061a12e8;border:1px solid #ffffff25;border-radius:10px;padding:8px 10px;font-size:12px;font-weight:800;line-height:1.45;backdrop-filter:blur(5px)}
@@ -93,7 +93,7 @@ input,select{background:#081f17;color:#fff;border:1px solid #476b59;border-radiu
 <div class="leader" id="leader"></div>
 <div class="commentary" id="commentary">各馬ゲート入り。まもなく発走です。</div>
 <div class="countdown hidden" id="countdown"></div>
-<div class="finishFlash" id="finishFlash">GOAL!</div>
+<div class="finishFlash" id="finishFlash">GOAL!</div><div id="winnerOverlay" class="hidden" style="position:absolute;inset:0;background:rgba(4,14,10,.84);display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;z-index:3"><div><div style="font-size:14px;letter-spacing:.2em;color:#efd48e">WINNER</div><div id="winnerNum" style="font-size:min(20vw,150px);font-weight:1000;line-height:1;color:#fff">8</div><div id="winnerName" style="font-size:min(8vw,48px);font-weight:1000;color:#ffe09b">新婦</div></div></div>
 </div>
 </div>
 <div id="screenResult" class="card result hidden"></div>
@@ -177,7 +177,7 @@ function renderPlayer(){
  const running=room.status==='running'&&h.finish==null;$('tapBtn').disabled=!running;
  if(room.status==='lobby')$('pStatus').textContent=ready?'準備OK・発走待ち':'「準備OK」を押してください';
  else if(room.status==='countdown')$('pStatus').textContent='まもなく発走！';
- else if(room.status==='running')$('pStatus').textContent=room.elapsed>=30?'最後の直線！逆転チャンス！':'レース中！';
+ else if(room.status==='running')$('pStatus').textContent=room.elapsed>=10?'最後の直線！逆転チャンス！':'レース中！';
  else if(room.status==='finished'){$('pStatus').textContent='レース終了';const k=room.finishOrder.indexOf(mySlot)+1;$('pResult').textContent=k?'あなたは '+k+'着！':'';}
 }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -320,19 +320,36 @@ function renderRace(prev){
  if(!room)return;if(threeReady&&horseModel&&visuals.length!==room.count)rebuildHorses();
  const sorted=[...room.horses].sort((a,b)=>{if(a.finish!=null&&b.finish!=null)return a.finish-b.finish;if(a.finish!=null)return -1;if(b.finish!=null)return 1;return b.progress-a.progress});
  $('leader').innerHTML=sorted.slice(0,5).map((h,i)=>'<div class="leadRow"><b>'+(i+1)+'</b><i class="cloth" style="background:'+colors[h.slot]+'"></i><span>'+escapeHtml(h.name)+'</span></div>').join('');
- $('phase').textContent=room.status==='lobby'?'発走前':room.status==='countdown'?'発走準備':room.status==='running'?(room.elapsed>=30?'最後の直線':'レース中'):'確定';
+ $('phase').textContent=room.status==='lobby'?'発走前':room.status==='countdown'?'発走準備':room.status==='running'?(room.elapsed>=10?'最後の直線':'レース中'):'確定';
  $('commentary').textContent=callText(sorted);
  if(room.status==='countdown'){const n=Math.max(1,Math.ceil((room.startAt-Date.now())/1000));$('countdown').textContent=n;$('countdown').classList.remove('hidden')}else $('countdown').classList.add('hidden');
  if(room.finishOrder.length>lastFinishCount){lastFinishCount=room.finishOrder.length;$('finishFlash').classList.remove('show');void $('finishFlash').offsetWidth;$('finishFlash').classList.add('show')}
  if(room.status==='lobby'){lastFinishCount=0;$('screenResult').classList.add('hidden')}
  if(room.status==='finished'){$('screenResult').classList.remove('hidden');$('screenResult').textContent='🏆 着順確定\n'+room.finishOrder.map((s,i)=>(i+1)+'着 '+room.horses[s].name+'　'+room.horses[s].finish.toFixed(2)+'秒').join('\n')}
+
+ const vid=$('cinematic'), winner=$('winnerOverlay');
+ if(vid){
+   if(room.status==='countdown'){try{vid.pause();vid.currentTime=0;}catch(e){};if(winner)winner.classList.add('hidden');}
+   if(room.status==='running'){
+     const desired=Math.max(0,Math.min(14.1,room.elapsed||0));
+     if(Math.abs((vid.currentTime||0)-desired)>.75){try{vid.currentTime=desired}catch(e){}}
+     if(vid.paused)vid.play().catch(()=>{});
+     if(winner)winner.classList.add('hidden');
+   }
+   if(room.status==='finished'){
+     vid.pause();
+     const ws=room.finishOrder[0];
+     if(ws!=null&&winner){$('winnerNum').textContent=ws+1;$('winnerName').textContent=room.horses[ws].name;winner.classList.remove('hidden');}
+   }
+   if(room.status==='lobby'){vid.pause();try{vid.currentTime=0}catch(e){};if(winner)winner.classList.add('hidden');}
+ }
 }
 function callText(sorted){
  if(!room)return'';const a=sorted[0]?.name||'',b=sorted[1]?.name||'';
  if(room.status==='lobby')return '各馬ゲート入り。参加者の準備を待っています。';
  if(room.status==='countdown')return 'まもなくスタート！';
  if(room.status==='finished')return '全頭ゴール。着順確定です。';
- const e=room.elapsed||0;if(e<4)return 'スタートしました！ 各馬一斉に飛び出します。';if(e<17)return '先頭は'+a+'。'+b+'が続き、馬群はまだ大きく崩れていません。';if(e<29)return a+'が先頭。中団・後方からも徐々に進出。';if(e<35)return '第4コーナーから直線へ。ここからが勝負です。';return '最後の直線！ '+a+'先頭、'+b+'が追う！ ゴールまで一気に駆け抜けます！';
+ const e=room.elapsed||0;if(e<2.5)return 'スタートしました！ 各馬一斉に飛び出します。';if(e<6)return '先頭は'+a+'。'+b+'が続き、馬群は向正面を進みます。';if(e<10)return '3・4コーナーへ。中団・後方からも進出。';return '最後の直線！ '+a+'先頭、'+b+'が追う！ ゴールまで一気に駆け抜けます！';
 }
 function animate3(){
  requestAnimationFrame(animate3);if(!renderer||!scene||!camera)return;const dt=Math.min(.05,clock3.getDelta());
