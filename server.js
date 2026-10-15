@@ -71,10 +71,11 @@ io.on('connection', socket => {
     cb({ok:true,room:publicRoom(r)}); emitRoom(r);
   });
 
-  socket.on('joinRoom', ({code:c,name,token}={},cb=()=>{}) => {
+  socket.on('joinRoom', ({code:c,name,token,slot}={},cb=()=>{}) => {
     c=String(c||'').toUpperCase(); const r=rooms.get(c);
     if(!r) return cb({ok:false,error:'ROOM_NOT_FOUND'});
     let h = token ? r.horses.find(x=>x.token===token) : null;
+    if(!h && Number.isInteger(slot) && slot>=0 && slot<r.count){if(r.horses[slot].token)return cb({ok:false,error:'SLOT_TAKEN'});h=r.horses[slot];}
     if(!h) h=r.horses.find(x=>!x.token);
     if(!h) return cb({ok:false,error:'ROOM_FULL'});
     if(!h.token) h.token = Math.random().toString(36).slice(2)+Date.now().toString(36);
@@ -119,7 +120,7 @@ io.on('connection', socket => {
 
   socket.on('tapBatch', ({count=1}={}) => {
     const d=socket.data||{}, r=rooms.get(d.room); if(!r||d.role!=='player'||r.status!=='running') return;
-    const h=r.horses[d.slot]; if(!h||h.token!==d.token||h.finish!=null) return;
+    const h=r.horses[d.slot]; if(!h||h.token!==d.token||h.socketId!==socket.id||h.finish!=null) return;
     const now=Date.now(); const safe=Math.max(0,Math.min(12,Math.floor(+count||0)));
     if(now-h.lastTapAt<35 && safe>4) return;
     h.lastTapAt=now; h.tapQueue=Math.min(12,h.tapQueue+safe);
