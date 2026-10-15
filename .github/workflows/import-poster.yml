@@ -1,0 +1,27 @@
+name: Import race poster
+on:
+  push:
+    paths:
+      - '.github/workflows/import-poster.yml'
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download fixed entrant reference image
+        env:
+          MEDIA_URL: "https://d2jqrm6oza8nb6.cloudfront.net/datasets/3c35a3c7-d4b9-4151-82d5-979b5c6c6206.png?_jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJrZXlIYXNoIjoiNDRhYTM3ZmM0ZDBkZDQ3MCIsImJ1Y2tldCI6InJ1bndheS1kYXRhc2V0cyIsInN0YWdlIjoicHJvZCIsImV4cCI6MTc5MjIzMDE0MH0.5v0Wp2c4FbVpGZY9zfZ_Mwbds7-rurbWP6Ft94SkfH0"
+        run: |
+          set -euo pipefail
+          mkdir -p public
+          curl --fail --location --retry 3 "$MEDIA_URL" -o public/race-poster.png
+          test -s public/race-poster.png
+      - name: Commit poster
+        run: |
+          git config user.name "wedding-derby-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/race-poster.png
+          git commit -m "Store fixed race poster locally" || exit 0
+          git push
