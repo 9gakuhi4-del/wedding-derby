@@ -21,7 +21,10 @@ function code() {
   return c;
 }
 function makeHorse(i) {
-  return { slot:i, name:`ゲスト${i+1}`, token:null, socketId:null, ready:false, progress:0, stamina:100, finish:null, tapQueue:0, lastTapAt:0 };
+  const number=i+1;
+  const female=[2,5,8].includes(number);
+  const bride=number===8;
+  return { slot:i, name:bride?'新婦':`ゲスト${number}`, female, bride, token:null, socketId:null, ready:false, progress:0, stamina:100, finish:null, tapQueue:0, lastTapAt:0 };
 }
 function publicRoom(r) {
   return {
@@ -29,7 +32,7 @@ function publicRoom(r) {
     finishOrder:r.finishOrder.slice(), hostConnected:!!r.hostId,
     horses:r.horses.map(h=>({
       slot:h.slot,name:h.name,ready:h.ready,connected:!!h.socketId,
-      progress:+h.progress.toFixed(3),stamina:+h.stamina.toFixed(1),finish:h.finish
+      progress:+h.progress.toFixed(3),stamina:+h.stamina.toFixed(1),finish:h.finish,female:!!h.female,bride:!!h.bride
     }))
   };
 }
