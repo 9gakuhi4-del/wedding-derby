@@ -139,20 +139,20 @@ setInterval(()=>{
   for(const r of rooms.values()) {
     if(r.status!=='running') continue;
     r.elapsed=Math.max(0,(now-r.startAt)/1000);
-    const sprint=r.elapsed>=30;
+    const sprint=r.elapsed>=10;
     for(const h of r.horses) {
       if(h.finish!=null) continue;
       h.stamina=Math.min(100,h.stamina+dt*(sprint?2.7:4.2));
-      const base=(1.10 + (h.slot%3)*0.035) * (h.stamina<12?0.72:1);
+      const base=(4.15 + (h.slot%3)*0.08) * (h.stamina<12?0.72:1);
       h.progress += dt*base*(sprint?1.10:1);
       const taps=Math.min(h.tapQueue,8); h.tapQueue-=taps;
       if(taps>0) {
         const eff=h.stamina<12?0.30:h.stamina<35?0.62:1;
-        h.progress += taps * 0.105 * eff * (sprint?1.95:1);
+        h.progress += taps * 0.42 * eff * (sprint?1.72:1);
         h.stamina=Math.max(0,h.stamina-taps*(sprint?1.28:1.0));
       }
-      if(r.elapsed>48) h.progress += dt*1.8;
-      if(r.elapsed>58) h.progress += dt*3.5;
+      if(r.elapsed>15) h.progress += dt*5.0;
+      if(r.elapsed>17) h.progress += dt*10.0;
       if(h.progress>=100) {
         h.progress=100; h.finish=+(r.elapsed.toFixed(2)); r.finishOrder.push(h.slot);
       }
