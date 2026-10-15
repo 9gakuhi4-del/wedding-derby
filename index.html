@@ -1,175 +1,87 @@
 <!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<html lang="ja"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>結婚記念杯 | Wedding Derby</title>
 <style>
-:root{--gold:#e7bd65;--deep:#0d261d;--panel:#17382b;--line:#2b5a45;--text:#fff}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(#0b211a,#112f24);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overscroll-behavior:none}
-main{max-width:1100px;margin:auto;padding:12px}.hero{text-align:center;padding:12px 10px;border-radius:16px;background:linear-gradient(135deg,#153b2c,#0d271e);border:1px solid #365b49}
-.kicker{font-size:11px;letter-spacing:.24em;color:#dfc484}.hero h1{margin:3px 0 0;font-size:28px;color:#f2d18c}.hero p{margin:4px 0;font-size:12px;color:#c9d6ce}
-.panel{background:rgba(21,55,42,.96);border:1px solid #315b48;border-radius:14px;padding:12px;margin-top:10px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-button,select,input{font:inherit;border-radius:10px;border:1px solid #4d705f;padding:9px 10px}select,input{background:#102a20;color:#fff}
-button{background:var(--gold);color:#251b0b;font-weight:800}button.secondary{background:#193c2d;color:#fff}button:disabled{opacity:.45}
-#stage{height:min(58vw,560px);min-height:330px;position:relative;overflow:hidden;border-radius:14px;background:#93b6c8;border:2px solid #b39459;margin-top:10px}
-#three{position:absolute;inset:0;width:100%;height:100%;display:block}
-.hud{position:absolute;inset:0;pointer-events:none}.live{position:absolute;top:10px;left:10px;padding:6px 9px;background:#10281fd9;border-radius:8px;font-weight:800;font-size:12px}
-.phase{position:absolute;top:10px;right:10px;padding:6px 9px;background:#10281fd9;border-radius:8px;font-weight:800;font-size:12px}
-.rank{position:absolute;left:10px;bottom:10px;max-width:78%;padding:7px 9px;background:#10281fd9;border-radius:8px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.clock{font-variant-numeric:tabular-nums}.names{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;margin-top:9px}.names label{display:flex;gap:5px;align-items:center;font-size:12px}.names input{min-width:0;width:100%}
-.meter{height:16px;border-radius:99px;background:#0d271e;overflow:hidden;border:1px solid #355b49}.meter>div{height:100%;width:100%;background:#5ac877;transition:width .09s linear,background .2s}
-#tap{width:100%;height:105px;font-size:26px;touch-action:manipulation;user-select:none;-webkit-user-select:none;margin-top:8px;box-shadow:0 5px 0 #ad8138}
-#tap:active{transform:translateY(3px);box-shadow:0 2px 0 #ad8138}.result{white-space:pre-line;line-height:1.8;text-align:center;font-weight:800}
-.note{font-size:11px;color:#bdd0c5;margin-top:8px}.badge{padding:3px 7px;border-radius:999px;background:#254e3b;font-size:11px}
-@media(max-width:600px){.hero h1{font-size:24px}#stage{height:390px}.rank{max-width:92%;font-size:11px}}
-</style>
-</head>
-<body>
-<main>
-<section class="hero">
-<div class="kicker">WEDDING DERBY 2026</div>
-<h1>結 婚 記 念 杯</h1>
-<p>3D競馬 × 連打 × スタミナ × ラスト15秒の逆転</p>
-</section>
-
-<section class="panel">
-<div class="row">
-<div class="controls">
-<label>出走頭数 <select id="count"><option value="6">6頭</option><option value="8" selected>8頭</option><option value="9">9頭</option></select></label>
+*{box-sizing:border-box}html,body{margin:0;background:#07150f;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:1280px;margin:auto;padding:10px}.hero{text-align:center;padding:10px;border-radius:14px;background:linear-gradient(135deg,#153a2b,#0a2118);border:1px solid #365b49}.hero h1{margin:2px;color:#f4d18a;letter-spacing:.12em;font-size:28px}.hero small{color:#cbd8d0}
+.panel{background:#113326;border:1px solid #315b48;border-radius:13px;padding:10px;margin-top:9px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:space-between}.controls{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+button,select,input{font:inherit;border-radius:9px;border:1px solid #4d705f;padding:8px 9px}select,input{background:#0b251a;color:#fff}button{background:#e7bd65;color:#241a0b;font-weight:800}button.secondary{background:#183c2d;color:#fff}button:disabled{opacity:.4}
+.names{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;margin-top:8px}.names label{display:flex;gap:5px;align-items:center;font-size:11px}.names input{min-width:0;width:100%}
+#stage{height:min(60vw,650px);min-height:370px;position:relative;overflow:hidden;border-radius:14px;border:2px solid #b08c50;margin-top:9px;background:#a8c5d1;box-shadow:0 15px 40px #0008}
+#three{position:absolute;inset:0;width:100%;height:100%;display:block}.hud{position:absolute;inset:0;pointer-events:none}.topbar{position:absolute;top:0;left:0;right:0;padding:9px;display:flex;justify-content:space-between;background:linear-gradient(#06150fd9,transparent)}
+.live,.phase,.cam{background:#091e16df;border:1px solid #ffffff22;border-radius:7px;padding:5px 8px;font-size:11px;font-weight:800;backdrop-filter:blur(4px)}.live:before{content:"";display:inline-block;width:7px;height:7px;background:#f33;border-radius:50%;margin-right:6px}.cam{position:absolute;left:10px;top:49px}
+.board{position:absolute;right:10px;top:49px;width:180px;background:#071a13e8;border:1px solid #ffffff22;border-radius:9px;padding:6px}.lb{display:grid;grid-template-columns:19px 13px 1fr;gap:5px;align-items:center;padding:3px 0;border-bottom:1px solid #ffffff12;font-size:11px}.lb:last-child{border:0}.cloth{height:12px;border-radius:2px;border:1px solid #ffffff88}
+.call{position:absolute;left:10px;bottom:10px;max-width:76%;background:#071a13e8;border:1px solid #ffffff22;border-radius:9px;padding:8px 10px;font-size:12px;font-weight:800;line-height:1.45}.goal{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#07150fa8;font-size:46px;font-weight:900;color:#ffe09a;text-shadow:0 4px 20px #000}.goal.show{display:flex;animation:g .85s ease}@keyframes g{0%{opacity:0;transform:scale(.85)}45%{opacity:1;transform:scale(1.08)}100%{opacity:0;transform:scale(1)}}
+.meter{height:15px;border-radius:99px;background:#0a2419;border:1px solid #355b49;overflow:hidden}.meter div{height:100%;background:#58c977;width:100%}#tap{width:100%;height:104px;margin-top:8px;font-size:26px;touch-action:manipulation;user-select:none;box-shadow:0 5px 0 #ad8138}#tap:active{transform:translateY(3px);box-shadow:0 2px 0 #ad8138}
+#result{white-space:pre-line;text-align:center;line-height:1.75;font-weight:800;margin-top:8px}.note{font-size:10px;color:#c0d0c7;margin-top:7px}
+@media(max-width:700px){.hero h1{font-size:23px}#stage{height:440px}.board{width:150px}.call{max-width:92%;font-size:11px}.names{grid-template-columns:repeat(2,1fr)}}
+</style></head><body><main>
+<section class="hero"><small>WEDDING DERBY 2026</small><h1>結 婚 記 念 杯</h1><small>リアル競馬中継風 3Dレース</small></section>
+<section class="panel"><div class="row"><div class="controls">
+<label>頭数 <select id="count"><option>6</option><option selected>8</option><option>9</option></select></label>
 <label>操作馬 <select id="pick"></select></label>
-</div>
-<div class="controls">
-<button id="start">出走！</button>
-<button id="reset" class="secondary">リセット</button>
-<span class="badge clock" id="clock">45.0秒</span>
-</div>
-</div>
-<div class="names" id="names"></div>
-</section>
-
-<section id="stage">
-<canvas id="three"></canvas>
-<div class="hud">
-<div class="live">● LIVE　結婚記念杯</div>
-<div class="phase" id="phase">発走前</div>
-<div class="rank" id="rank">出走馬がゲート入りしています</div>
-</div>
-</section>
-
-<section class="panel">
-<div class="row"><strong>スタミナ</strong><span id="stamina">100%</span></div>
-<div class="meter"><div id="fill"></div></div>
-<div class="row" style="margin-top:7px"><span id="msg">スタートを待っています</span><span id="taps">0連打</span></div>
-<button id="tap" disabled>🏇 連打して加速！</button>
-<div id="result" class="result"></div>
-<div class="note">試作版：この画面では1人対CPU。全頭がゴールするまでレースは続きます。大差勝ちも接戦もあり。8人同時スマホ対戦は通信サーバーをつないだ本番版で実装します。</div>
-</section>
+</div><div class="controls"><button id="start">発走</button><button id="reset" class="secondary">リセット</button><button id="fullscreen" class="secondary">全画面</button><span id="clock">45.0秒</span></div></div><div id="names" class="names"></div></section>
+<section id="stage"><canvas id="three"></canvas><div class="hud"><div class="topbar"><div class="live">LIVE　結婚記念杯</div><div class="phase" id="phase">発走前</div></div><div class="cam" id="cam">CAM 1　追走</div><div class="board" id="board"></div><div class="call" id="call">各馬ゲート入り。まもなくスタートです。</div><div class="goal" id="goal">GOAL!</div></div></section>
+<section class="panel"><div class="row"><strong>スタミナ</strong><span id="stamina">100%</span></div><div class="meter"><div id="fill"></div></div><div class="row" style="margin-top:7px"><span id="msg">スタート待機</span><span id="taps">0連打</span></div><button id="tap" disabled>🏇 連打して加速！</button><div id="result"></div><div class="note">現在は1人対CPUの映像試作。連打・スタミナ・ラスト15秒の逆転・全頭完走に対応。会場スクリーン向けにカメラが自動切替します。</div></section>
 </main>
-
 <script src="https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.min.js"></script>
 <script>
 (()=>{
-const $=id=>document.getElementById(id);
-const gateColors=[0xf4f4f4,0x222222,0xe7463e,0x3485d8,0xf0cf36,0x3fa868,0xef8e35,0xd66ca7,0x8f70cc];
-let horses=[],selected=0,running=false,startTime=0,lastTime=0,timer=null,taps=0,finishOrder=[];
-let renderer,scene,camera,horseMeshes=[],rail1,rail2;
-function makeHorse(i){
-  const g=new THREE.Group();
-  const coat=[0x6b3d22,0x3f291e,0x8c5b38,0x5b3525,0x2f241e,0x7c4a2b,0x4b3125,0x966540,0x3c2b25][i%9];
-  const mat=new THREE.MeshStandardMaterial({color:coat,roughness:.75});
-  const dark=new THREE.MeshStandardMaterial({color:0x241712,roughness:.9});
-  const body=new THREE.Mesh(new THREE.SphereGeometry(1,18,12),mat);body.scale.set(1.9,.78,.72);g.add(body);
-  const neck=new THREE.Mesh(new THREE.CylinderGeometry(.34,.48,1.55,10),mat);neck.rotation.z=-.52;neck.position.set(1.35,.72,0);g.add(neck);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.52,14,10),mat);head.scale.set(1.1,.7,.72);head.position.set(1.95,1.25,0);g.add(head);
-  const muzzle=new THREE.Mesh(new THREE.SphereGeometry(.25,10,8),dark);muzzle.scale.set(1.25,.7,.8);muzzle.position.set(2.38,1.15,0);g.add(muzzle);
-  const legGeo=new THREE.CylinderGeometry(.105,.12,1.45,7);const legs=[];
-  [[-.8,-.75,.36],[-.65,-.75,-.36],[.72,-.72,.35],[.88,-.72,-.35]].forEach((p,k)=>{const leg=new THREE.Mesh(legGeo,dark);leg.position.set(...p);leg.userData.k=k;legs.push(leg);g.add(leg)});
-  const saddle=new THREE.Mesh(new THREE.BoxGeometry(.95,.16,.82),new THREE.MeshStandardMaterial({color:gateColors[i],roughness:.65}));saddle.position.set(-.05,.72,0);g.add(saddle);
-  const jockey=new THREE.Group();
-  const torso=new THREE.Mesh(new THREE.CylinderGeometry(.23,.30,.75,10),new THREE.MeshStandardMaterial({color:gateColors[i],roughness:.55}));torso.rotation.z=-.15;torso.position.set(.02,1.2,0);jockey.add(torso);
-  const headJ=new THREE.Mesh(new THREE.SphereGeometry(.22,12,8),new THREE.MeshStandardMaterial({color:0xe4b48d}));headJ.position.set(.15,1.65,0);jockey.add(headJ);
-  const helmet=new THREE.Mesh(new THREE.SphereGeometry(.24,12,8),new THREE.MeshStandardMaterial({color:gateColors[i]}));helmet.scale.y=.65;helmet.position.set(.15,1.83,0);jockey.add(helmet);g.add(jockey);
-  g.userData={legs,phase:i*.7};
-  return g;
+const $=x=>document.getElementById(x);
+const cloth=['#f7f7f7','#171717','#d43131','#2f7bd4','#e8c92c','#35a265','#ef8c32','#d96fa7','#8465c8'];
+const coat=[0x693d25,0x2c211b,0x8a5d3c,0x4c3124,0x2a211b,0x784a2d,0x573525,0x956645,0x392820];
+let H=[],sel=0,run=false,t0=0,last=0,timer=null,taps=0,order=[],renderer,scene,camera,meshes=[],gate,finishX=52;
+function M(c,r=.8){return new THREE.MeshStandardMaterial({color:c,roughness:r})}
+function horse(i){
+ const g=new THREE.Group(), cm=M(coat[i%coat.length]), dm=M(0x21150f,.92), bm=M(0x0d0b09,.96);
+ let b=new THREE.Mesh(new THREE.SphereGeometry(1,26,16),cm);b.scale.set(1.9,.82,.76);b.castShadow=true;g.add(b);
+ let chest=new THREE.Mesh(new THREE.SphereGeometry(.68,20,14),cm);chest.scale.set(.9,1,.9);chest.position.set(.92,.22,0);g.add(chest);
+ let neck=new THREE.Mesh(new THREE.CylinderGeometry(.31,.51,1.7,14),cm);neck.rotation.z=-.58;neck.position.set(1.4,.84,0);g.add(neck);
+ let head=new THREE.Mesh(new THREE.SphereGeometry(.5,20,14),cm);head.scale.set(1.18,.72,.72);head.position.set(2.1,1.37,0);g.add(head);
+ let muzzle=new THREE.Mesh(new THREE.SphereGeometry(.25,14,10),dm);muzzle.scale.set(1.35,.7,.85);muzzle.position.set(2.55,1.2,0);g.add(muzzle);
+ [-1,1].forEach(s=>{let e=new THREE.Mesh(new THREE.ConeGeometry(.09,.3,8),cm);e.position.set(2.1,1.82,s*.25);e.rotation.z=-.15;g.add(e)});
+ let tail=new THREE.Mesh(new THREE.CylinderGeometry(.09,.03,1.55,8),bm);tail.position.set(-1.98,.25,0);tail.rotation.z=.92;g.add(tail);
+ const legs=[];[[-.9,.38],[-.72,-.38],[.72,.38],[.9,-.38]].forEach((p,k)=>{let lg=new THREE.Group();let u=new THREE.Mesh(new THREE.CylinderGeometry(.095,.115,1.42,8),dm);u.position.y=-.47;lg.add(u);let hf=new THREE.Mesh(new THREE.BoxGeometry(.23,.17,.2),bm);hf.position.y=-1.18;lg.add(hf);lg.position.set(p[0],-.12,p[1]);legs.push(lg);g.add(lg)});
+ let saddle=new THREE.Mesh(new THREE.BoxGeometry(1,.16,.9),M(parseInt(cloth[i].slice(1),16),.65));saddle.position.set(-.05,.74,0);g.add(saddle);
+ let torso=new THREE.Mesh(new THREE.CylinderGeometry(.22,.29,.72,10),M(parseInt(cloth[i].slice(1),16),.55));torso.position.set(.03,1.23,0);torso.rotation.z=-.18;g.add(torso);
+ let jh=new THREE.Mesh(new THREE.SphereGeometry(.2,12,8),M(0xe1ad86,.7));jh.position.set(.17,1.67,0);g.add(jh);let helm=new THREE.Mesh(new THREE.SphereGeometry(.23,12,8),M(parseInt(cloth[i].slice(1),16),.5));helm.scale.y=.65;helm.position.set(.17,1.82,0);g.add(helm);
+ g.userData={legs,phase:i*.8};return g;
 }
-function init3D(){
-  const canvas=$('three');renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;
-  scene=new THREE.Scene();scene.background=new THREE.Color(0xa8c4d3);scene.fog=new THREE.Fog(0xa8c4d3,55,155);
-  camera=new THREE.PerspectiveCamera(45,1,.1,240);camera.position.set(-6,20,34);camera.lookAt(3,0,0);
-  scene.add(new THREE.HemisphereLight(0xffffff,0x315e36,2.0));const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(-20,35,25);sun.castShadow=true;scene.add(sun);
-  const turf=new THREE.Mesh(new THREE.PlaneGeometry(180,42),new THREE.MeshStandardMaterial({color:0x397a45,roughness:1}));turf.rotation.x=-Math.PI/2;turf.position.x=32;scene.add(turf);
-  for(let z=-14;z<=14;z+=4){const line=new THREE.Mesh(new THREE.PlaneGeometry(180,.045),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.18}));line.rotation.x=-Math.PI/2;line.position.set(32,.012,z);scene.add(line)}
-  const railMat=new THREE.MeshStandardMaterial({color:0xf6f6f6,roughness:.6});const geo=new THREE.BoxGeometry(180,.18,.18);
-  rail1=new THREE.Mesh(geo,railMat);rail1.position.set(32,.9,-16);scene.add(rail1);rail2=new THREE.Mesh(geo,railMat);rail2.position.set(32,.9,16);scene.add(rail2);
-  for(let x=-55;x<120;x+=4){[-16,16].forEach(z=>{const post=new THREE.Mesh(new THREE.BoxGeometry(.12,1.8,.12),railMat);post.position.set(x,.0,z);scene.add(post)})}
-  const finish=new THREE.Group();for(let y=0;y<5;y++){const a=new THREE.Mesh(new THREE.BoxGeometry(.2,.45,33),new THREE.MeshBasicMaterial({color:y%2?0x111111:0xffffff}));a.position.set(47.2,.23+y*.45,0);finish.add(a)}scene.add(finish);
-  const stand=new THREE.Mesh(new THREE.BoxGeometry(85,8,12),new THREE.MeshStandardMaterial({color:0x66747c,roughness:.85}));stand.position.set(12,4,-31);scene.add(stand);
-  const roof=new THREE.Mesh(new THREE.BoxGeometry(90,.5,15),new THREE.MeshStandardMaterial({color:0xd8dde0,roughness:.7}));roof.position.set(12,8.5,-31);scene.add(roof);
-  resize();window.addEventListener('resize',resize);animate();
+function init3(){
+ renderer=new THREE.WebGLRenderer({canvas:$('three'),antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.shadowMap.enabled=true;
+ scene=new THREE.Scene();scene.background=new THREE.Color(0xb2c9d2);scene.fog=new THREE.Fog(0xb2c9d2,70,175);
+ camera=new THREE.PerspectiveCamera(42,1,.1,260);scene.add(new THREE.HemisphereLight(0xffffff,0x315b36,2.25));let sun=new THREE.DirectionalLight(0xffffff,2.6);sun.position.set(-30,45,28);sun.castShadow=true;scene.add(sun);
+ let turf=new THREE.Mesh(new THREE.PlaneGeometry(220,46),M(0x3d7f47,1));turf.rotation.x=-Math.PI/2;turf.position.x=35;scene.add(turf);
+ for(let z=-15;z<=15;z+=3.8){let stripe=new THREE.Mesh(new THREE.PlaneGeometry(220,.055),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.1}));stripe.rotation.x=-Math.PI/2;stripe.position.set(35,.015,z);scene.add(stripe)}
+ let railM=M(0xf7f7f7,.6);[-17,17].forEach(z=>{let r=new THREE.Mesh(new THREE.BoxGeometry(220,.16,.16),railM);r.position.set(35,1,z);scene.add(r);for(let x=-70;x<140;x+=4){let p=new THREE.Mesh(new THREE.BoxGeometry(.12,1.9,.12),railM);p.position.set(x,.1,z);scene.add(p)}})
+ gate=new THREE.Group();for(let i=0;i<9;i++){let box=new THREE.Mesh(new THREE.BoxGeometry(1.6,2.6,2.4),new THREE.MeshStandardMaterial({color:0x5c6b60,wireframe:true}));box.position.set(-49,1.2,(i-4)*3.15);gate.add(box)}scene.add(gate);
+ let line=new THREE.Mesh(new THREE.BoxGeometry(.16,.02,40),new THREE.MeshBasicMaterial({color:0xffffff}));line.position.set(finishX,.03,0);scene.add(line);
+ for(let k=0;k<10;k++){let post=new THREE.Mesh(new THREE.BoxGeometry(.35,2.3,.35),M(k%2?0xffffff:0x202020,.6));post.position.set(finishX,1.15,-18+k*4);scene.add(post)}
+ let stand=new THREE.Mesh(new THREE.BoxGeometry(100,10,13),M(0x6d7880,.9));stand.position.set(15,5,-34);scene.add(stand);let roof=new THREE.Mesh(new THREE.BoxGeometry(105,.6,16),M(0xd7dde0,.7));roof.position.set(15,10.3,-34);scene.add(roof);
+ resize();addEventListener('resize',resize);anim();
 }
-function resize(){const s=$('stage').getBoundingClientRect();renderer.setSize(s.width,s.height,false);camera.aspect=s.width/s.height;camera.updateProjectionMatrix()}
-function rebuildMeshes(){horseMeshes.forEach(m=>scene.remove(m));horseMeshes=[];horses.forEach((h,i)=>{const m=makeHorse(i);m.position.set(-43,.95,(i-(horses.length-1)/2)*3.2);scene.add(m);horseMeshes.push(m)})}
-function setup(){
-  clearInterval(timer);running=false;taps=0;finishOrder=[];selected=0;
-  const n=+$('count').value;horses=Array.from({length:n},(_,i)=>({name:'ゲスト'+(i+1),p:0,s:100,done:false,time:null,base:.62+Math.random()*.16,burst:0}));
-  $('pick').innerHTML=horses.map((h,i)=>'<option value="'+i+'">'+(i+1)+'番</option>').join('');
-  $('names').innerHTML=horses.map((h,i)=>'<label><b>'+(i+1)+'番</b><input maxlength="12" data-i="'+i+'" value="'+h.name+'"></label>').join('');
-  $('names').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{const i=+inp.dataset.i;horses[i].name=inp.value.trim()||'ゲスト'+(i+1);updateRank()}));
-  $('start').disabled=false;$('tap').disabled=true;$('pick').disabled=false;$('count').disabled=false;
-  $('clock').textContent='45.0秒';$('phase').textContent='発走前';$('msg').textContent='スタートを待っています';$('taps').textContent='0連打';$('result').textContent='';rebuildMeshes();meter();updateRank();
-}
-function meter(){const s=horses[selected]?.s??100;$('fill').style.width=s+'%';$('fill').style.background=s<25?'#e35c50':s<55?'#dda33c':'#5ac877';$('stamina').textContent=Math.round(s)+'%'}
-function updateRank(){
-  const rank=horses.map((h,i)=>({i,p:h.p,time:h.time})).sort((a,b)=>{if(a.time!==null&&b.time!==null)return a.time-b.time;if(a.time!==null)return -1;if(b.time!==null)return 1;return b.p-a.p});
-  $('rank').textContent='現在：'+rank.slice(0,5).map((r,k)=>(k+1)+'位 '+horses[r.i].name).join('　');
-}
-function endRace(){
-  running=false;clearInterval(timer);$('tap').disabled=true;$('start').disabled=false;$('pick').disabled=false;$('count').disabled=false;$('phase').textContent='全頭ゴール';
-  const order=[...finishOrder];$('result').textContent='🏆 着順確定\n'+order.map((i,k)=>(k+1)+'着 '+horses[i].name+'　'+horses[i].time.toFixed(1)+'秒').join('\n');
-}
-function logic(){
-  if(!running)return;
-  const now=performance.now(),dt=Math.min(.22,(now-lastTime)/1000);lastTime=now;const sec=(now-startTime)/1000;const sprint=sec>=30;
-  $('clock').textContent=(sec<45?Math.max(0,45-sec).toFixed(1):'延長中');
-  $('phase').textContent=sprint?'🔥 最後の直線':'レース中';$('msg').textContent=sprint?'残したスタミナで差せ！':'連打と休憩でスタミナ調整';
-  horses.forEach((h,i)=>{
-    if(h.done)return;
-    h.s=Math.min(100,h.s+dt*(sprint?3.0:4.6));
-    let pace=h.base*(h.s<15?.64:1)*(sprint?1.18:1);
-    if(i!==selected&&Math.random()<dt*(sprint?5.4:3.9)&&h.s>9){h.burst+=sprint?1.05:.57;h.s=Math.max(0,h.s-(sprint?3.2:2.0))}
-    h.p+=dt*pace+h.burst;h.burst=0;
-    if(sec>45)h.p+=dt*(1.55+(i%3)*.14);
-    if(h.p>=100){h.p=100;h.done=true;h.time=sec;finishOrder.push(i);if(i===selected)$('tap').disabled=true}
-  });
-  updateRank();meter();if(horses.every(h=>h.done))endRace();
-}
-function animate(t=0){
-  requestAnimationFrame(animate);
-  horseMeshes.forEach((m,i)=>{
-    const h=horses[i];if(!h)return;
-    const x=-43+h.p*.9;m.position.x=x;
-    const speed=h.done?0:(.8+Math.min(2.1,h.p/60));m.userData.phase+=.05*speed;
-    m.position.y=.95+Math.sin(m.userData.phase*2.1)*.08;
-    m.userData.legs.forEach((leg,k)=>{leg.rotation.z=Math.sin(m.userData.phase*3.5+(k%2)*Math.PI)*.55});
-  });
-  if(horses.length){const lead=Math.max(...horses.map(h=>h.p));const targetX=Math.min(39,-24+lead*.62);camera.position.x+=(targetX-camera.position.x)*.025;camera.lookAt(camera.position.x+8,1.2,0)}
-  renderer.render(scene,camera);
-}
-$('count').addEventListener('change',setup);
-$('pick').addEventListener('change',()=>{selected=+$('pick').value;meter()});
-$('reset').addEventListener('click',setup);
-$('start').addEventListener('click',()=>{
-  horses.forEach(h=>{h.p=0;h.s=100;h.done=false;h.time=null;h.burst=0});finishOrder=[];taps=0;running=true;startTime=performance.now();lastTime=startTime;
-  $('start').disabled=true;$('tap').disabled=false;$('pick').disabled=true;$('count').disabled=true;$('result').textContent='';$('taps').textContent='0連打';clearInterval(timer);timer=setInterval(logic,90);
-});
-$('tap').addEventListener('pointerdown',e=>{
-  e.preventDefault();if(!running)return;const h=horses[selected];if(!h||h.done)return;const sprint=(performance.now()-startTime)>=30000;
-  const power=h.s<12?.08:h.s<35?.18:.34;h.p=Math.min(100,h.p+power*(sprint?2.15:1));h.s=Math.max(0,h.s-(sprint?1.5:1.2));taps++;$('taps').textContent=taps+'連打';meter();
-  if(h.p>=100&&!h.done){h.done=true;h.time=(performance.now()-startTime)/1000;finishOrder.push(selected);$('tap').disabled=true}
-});
-init3D();setup();
+function resize(){let s=$('stage').getBoundingClientRect();renderer.setSize(s.width,s.height,false);camera.aspect=s.width/s.height;camera.updateProjectionMatrix()}
+function rebuild(){meshes.forEach(m=>scene.remove(m));meshes=[];H.forEach((h,i)=>{let m=horse(i);m.position.set(-45,.9,(i-(H.length-1)/2)*3.05);scene.add(m);meshes.push(m)})}
+function setup(){clearInterval(timer);run=false;sel=0;taps=0;order=[];let n=+$('count').value;H=Array.from({length:n},(_,i)=>({name:'ゲスト'+(i+1),p:0,s:100,done:false,time:null,base:.61+Math.random()*.16,burst:0}));$('pick').innerHTML=H.map((h,i)=>'<option value="'+i+'">'+(i+1)+'番</option>').join('');$('names').innerHTML=H.map((h,i)=>'<label><b>'+(i+1)+'番</b><input maxlength="12" data-i="'+i+'" value="'+h.name+'"></label>').join('');$('names').querySelectorAll('input').forEach(e=>e.oninput=()=>{let i=+e.dataset.i;H[i].name=e.value.trim()||'ゲスト'+(i+1);board()});$('start').disabled=false;$('tap').disabled=true;$('pick').disabled=false;$('count').disabled=false;$('clock').textContent='45.0秒';$('phase').textContent='発走前';$('cam').textContent='CAM 1　追走';$('call').textContent='各馬ゲート入り。まもなくスタートです。';$('result').textContent='';$('taps').textContent='0連打';gate.visible=true;rebuild();meter();board()}
+function meter(){let s=H[sel]?.s??100;$('fill').style.width=s+'%';$('fill').style.background=s<25?'#e45c50':s<55?'#dda33d':'#58c977';$('stamina').textContent=Math.round(s)+'%'}
+function ranks(){return H.map((h,i)=>({i,p:h.p,time:h.time})).sort((a,b)=>{if(a.time!=null&&b.time!=null)return a.time-b.time;if(a.time!=null)return -1;if(b.time!=null)return 1;return b.p-a.p})}
+function board(){let r=ranks();$('board').innerHTML=r.slice(0,5).map((x,k)=>'<div class="lb"><b>'+(k+1)+'</b><span class="cloth" style="background:'+cloth[x.i]+'"></span><span>'+H[x.i].name+'</span></div>').join('')}
+function say(sec){let r=ranks(),lead=H[r[0].i],second=H[r[1]?.i||r[0].i];if(sec<2)return 'スタートしました！ 各馬一斉に飛び出しました。';if(sec<12)return '先頭は'+lead.name+'。馬群はまだ一団、各馬ポジションを探ります。';if(sec<25)return lead.name+'が先頭。'+second.name+'がその直後、後方勢も徐々に差を詰めます。';if(sec<30)return '第4コーナーへ。ここから各馬、最後の脚を残せるか。';if(sec<40)return '直線に入りました！ '+lead.name+'先頭！ 外から後続が一気に迫る！';return 'ゴール前！ '+lead.name+'が粘る！ 後続も追い込む！'}
+function logic(){if(!run)return;let now=performance.now(),dt=Math.min(.22,(now-last)/1000);last=now;let sec=(now-t0)/1000,sprint=sec>=30;$('clock').textContent=sec<45?Math.max(0,45-sec).toFixed(1)+'秒':'延長';$('phase').textContent=sprint?'最後の直線':'レース中';$('msg').textContent=sprint?'差せ！ラストスパート！':'連打と休憩でスタミナ調整';$('call').textContent=say(sec);
+ H.forEach((h,i)=>{if(h.done)return;h.s=Math.min(100,h.s+dt*(sprint?3:4.6));let pace=h.base*(h.s<15?.63:1)*(sprint?1.20:1);if(i!==sel&&Math.random()<dt*(sprint?5.4:3.9)&&h.s>8){h.burst+=sprint?1.04:.56;h.s-=sprint?3.1:2}h.p+=dt*pace+h.burst;h.burst=0;if(sec>45)h.p+=dt*(1.7+(i%3)*.15);if(h.p>=100){h.p=100;h.done=true;h.time=sec;order.push(i);if(i===sel)$('tap').disabled=true;$('goal').classList.remove('show');void $('goal').offsetWidth;$('goal').classList.add('show')}});board();meter();if(H.every(h=>h.done))end()}
+function end(){run=false;clearInterval(timer);$('tap').disabled=true;$('start').disabled=false;$('pick').disabled=false;$('count').disabled=false;$('phase').textContent='全頭ゴール';$('call').textContent='全頭ゴールしました。着順確定です。';$('result').textContent='🏆 着順確定\n'+order.map((i,k)=>(k+1)+'着 '+H[i].name+'　'+H[i].time.toFixed(1)+'秒').join('\n')}
+function anim(){requestAnimationFrame(anim);let sec=run?(performance.now()-t0)/1000:0,lead=Math.max(0,...H.map(h=>h.p));
+ meshes.forEach((m,i)=>{let h=H[i];if(!h)return;m.position.x=-45+h.p*.97;let sp=h.done?0:1+Math.min(2,h.p/60);m.userData.phase+=.052*sp;m.position.y=.9+Math.sin(m.userData.phase*2)*.09;m.userData.legs.forEach((l,k)=>l.rotation.z=Math.sin(m.userData.phase*3.6+(k%2)*Math.PI)*.58)});
+ if(!run){camera.position.set(-12,20,34);camera.lookAt(-3,1,0);$('cam').textContent='CAM 1　追走'}
+ else if(sec<25){let x=-30+lead*.63;camera.position.lerp(new THREE.Vector3(x,13,31),.035);camera.lookAt(x+8,1,0);$('cam').textContent='CAM 1　横追い'}
+ else if(sec<34){let x=-10+lead*.55;camera.position.lerp(new THREE.Vector3(x+12,16,25),.035);camera.lookAt(x+2,1,0);$('cam').textContent='CAM 2　第4コーナー'}
+ else if(sec<43){let x=-2+lead*.53;camera.position.lerp(new THREE.Vector3(x-2,9,22),.04);camera.lookAt(x+14,1,0);$('cam').textContent='CAM 3　最後の直線'}
+ else{camera.position.lerp(new THREE.Vector3(finishX+7,7,25),.04);camera.lookAt(finishX-8,1,0);$('cam').textContent='CAM 4　ゴール前'}
+ renderer.render(scene,camera)}
+$('count').onchange=setup;$('pick').onchange=()=>{sel=+$('pick').value;meter()};$('reset').onclick=setup;$('fullscreen').onclick=()=>document.fullscreenElement?document.exitFullscreen():$('stage').requestFullscreen?.();
+$('start').onclick=()=>{H.forEach(h=>{h.p=0;h.s=100;h.done=false;h.time=null;h.burst=0});order=[];taps=0;run=true;t0=performance.now();last=t0;gate.visible=false;$('start').disabled=true;$('tap').disabled=false;$('pick').disabled=true;$('count').disabled=true;$('result').textContent='';$('taps').textContent='0連打';clearInterval(timer);timer=setInterval(logic,90)};
+$('tap').onpointerdown=e=>{e.preventDefault();if(!run)return;let h=H[sel];if(!h||h.done)return;let sprint=performance.now()-t0>=30000,p=h.s<12?.08:h.s<35?.18:.34;h.p=Math.min(100,h.p+p*(sprint?2.15:1));h.s=Math.max(0,h.s-(sprint?1.5:1.2));taps++;$('taps').textContent=taps+'連打';meter()};
+init3();setup();
 })();
-</script>
-</body></html>
+</script></body></html>
