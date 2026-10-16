@@ -6,7 +6,7 @@ Eight-player, server-authoritative wedding racing game. Bride is slot 8; slots 2
 
 `npm install` then `npm start`. Default port: 10000. `npm run build` rebuilds the committed renderer bundle. `node check.cjs` checks deterministic race outcomes, input effects, stamina and inactive slots.
 
-The renderer uses an actual skinned GLB horse with an authored gallop, 3D riders, dress and veil, physically lit turf, rails, grandstands and three camera views. Buttons change the server simulation; world positions and gait speed follow those same states. Replay uses recorded race states.
+The renderer uses an actual skinned GLB horse with an authored gallop, 3D riders, dress and veil, physically lit turf, rails, grandstands and three camera views. Buttons change the server simulation; world positions and gait speed follow those same states. Replay uses recorded race states. The 1,200 m closed oval has two 200 m bends and two 400 m straights; the final 400 m is the home straight. Horses, rails, distance markers, camera direction and the live course map share one path function. Lane offsets are visual only: every horse retains the same authoritative progress and finish rules. `node check-course.mjs` verifies the lap geometry and its joins.
 
 ## Asset provenance
 
