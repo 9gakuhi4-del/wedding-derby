@@ -4,9 +4,19 @@ Eight-player, server-authoritative wedding racing game. Bride is slot 8; slots 2
 
 ## Run
 
-`npm install` then `npm start`. Default port: 10000. `npm run build` rebuilds the committed renderer bundle. `node check.cjs` checks deterministic race outcomes, input effects, stamina and inactive slots.
+`npm install` then `npm start`. Default port: 10000. `npm run build` rebuilds the committed renderer bundle. `node check-live.cjs` runs a local eight-player round, reconnection, readiness and reset integration check. `node check.cjs` checks deterministic race outcomes, input effects, stamina and inactive slots.
 
 The renderer uses an actual skinned GLB horse with an authored gallop, 3D riders, dress and veil, physically lit turf, rails, grandstands and three camera views. Buttons change the server simulation; world positions and gait speed follow those same states. Replay uses recorded race states. The 1,200 m closed oval has two 200 m bends and two 400 m straights; the final 400 m is the home straight. Horses, rails, distance markers, camera direction and the live course map share one path function. Lane offsets are visual only: every horse retains the same authoritative progress and finish rules. `node check-course.mjs` verifies the lap geometry and its joins.
+
+## Wedding-day flow
+
+1. Open the game on the venue PC and create a room. Use **参加QR** to let the eight riders join on their own phones.
+2. Each rider chooses a number and name, waits for the 3D assets, then presses **準備OK**. The host can start once connected riders are ready.
+3. **自動** switches broadcast shots; **追走** follows your horse; **全景** shows the complete oval. Sound is opt-in.
+4. Official results appear after the visible finish. Save the results as an image, replay the whole race, or watch the approach to the finish at 0.5× speed.
+5. **次のレース** keeps riders and names but resets readiness and increments the round. Disconnected seats can be released from the lobby for replacement riders.
+
+Final positions remain server-authoritative. Run-out animation and ceremony effects never change the winner. There is no finish-order override.
 
 ## Asset provenance
 

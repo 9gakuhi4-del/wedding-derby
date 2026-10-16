@@ -9,10 +9,12 @@
   },
   "dependencies": {
     "express": "^5.1.0",
+    "qrcode-generator": "^1.4.4",
     "socket.io": "^4.8.1",
     "three": "0.180.0"
   },
   "devDependencies": {
-    "esbuild": "0.25.12"
+    "esbuild": "0.25.12",
+    "socket.io-client": "^4.8.1"
   }
 }

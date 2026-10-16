@@ -1,6 +1,6 @@
 'use strict';
 function makeHorse(slot){return{slot,name:slot===7?'新婦':`ゲスト${slot+1}`,female:[1,4,7].includes(slot),bride:slot===7,token:null,socketId:null,ready:false,active:true,progress:0,stamina:100,speed:0,effort:0,tapQueue:0,acceptedTaps:0,lastInputTick:-1000,finish:null,conserve:false,lastAcceptedTick:-1000}}
-function resetRace(r){r.status='lobby';r.startAt=null;r.elapsed=0;r.tick=0;r.finishOrder=[];for(const h of r.horses)Object.assign(h,{active:true,progress:0,stamina:100,speed:0,effort:0,tapQueue:0,acceptedTaps:0,lastInputTick:-1000,finish:null,conserve:false,lastAcceptedTick:-1000})}
+function resetRace(r){r.status='lobby';r.startAt=null;r.elapsed=0;r.tick=0;r.finishOrder=[];for(const h of r.horses)Object.assign(h,{ready:false,active:true,progress:0,stamina:100,speed:0,effort:0,tapQueue:0,acceptedTaps:0,lastInputTick:-1000,finish:null,conserve:false,lastAcceptedTick:-1000})}
 function stepRace(r,dt){r.tick++;r.elapsed=r.tick*dt;const finishers=[];for(const h of r.horses){if(!h.active||h.finish!=null)continue;
  if(r.practice&&h.slot!==7){const strategy=[20,25,32,36,28,24,38][h.slot];h.conserve=h.stamina<strategy&&h.progress<75;if(!h.conserve&&r.tick%(5+h.slot%3)===0)h.tapQueue=1;}
  let accepted=0;if(h.tapQueue>0&&r.tick-h.lastAcceptedTick>=3){accepted=1;h.tapQueue--;h.lastAcceptedTick=r.tick;h.acceptedTaps++;h.lastInputTick=r.tick;}
