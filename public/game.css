@@ -21,3 +21,8 @@
 @media(prefers-reduced-motion:reduce){.raceMoment,#celebration i{animation:none}.raceProgress i,.paceMeter i{transition:none}}
 
 .releaseSeat{font-size:9px;background:transparent;color:#e6c482;border:1px solid #e6c48244;padding:4px;white-space:nowrap}.rosterRow{flex-wrap:wrap}.rosterRow input{flex:1;width:70px}
+
+#stage:fullscreen{width:100vw;height:100dvh;max-height:none;aspect-ratio:auto;border:0;border-radius:0}
+.stageHostControls{display:none;position:absolute;left:2%;top:calc(16% + 104px);width:190px;gap:10px;padding:13px;background:#0b2119e8;border:1px solid #e6c48266;border-radius:9px;pointer-events:auto;z-index:3}
+.stage:fullscreen .stageHostControls{display:grid}.stageHostControls>span{font-size:12px;line-height:1.6;color:#eee4ce}.stageHostControls button{font-size:17px;min-height:48px}.stageHostControls button:disabled{opacity:.6}
+@media(max-width:700px){.stageHostControls{top:calc(19% + 68px);width:150px;padding:9px;gap:7px}.stageHostControls>span{font-size:10px}.stageHostControls button{font-size:14px;min-height:42px}}

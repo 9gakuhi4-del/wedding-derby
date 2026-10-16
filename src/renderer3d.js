@@ -97,25 +97,46 @@ class RaceRenderer{
  for(const h of this.state.horses){if(!h.active&&this.state.status!=='lobby')continue;const [x,y]=point(coursePose((this.visual[h.slot]||0)*12,(h.slot-3.5)*2.6));c.beginPath();c.arc(x,y,h.slot===this.selected?6:4,0,Math.PI*2);c.fillStyle=COLORS[h.slot];c.fill();if(h.slot===this.selected){c.strokeStyle='#fff';c.lineWidth=2;c.stroke()}}
  }
 
- updateLabels(w,h){
- // Keep the number legible in CSS pixels, independent of camera distance/FOV.
+ updateLabels(w,h,dt=.016,reset=false){
+ // Screen-sized badges use a level anchor, independent of the horse's leaning/gait.
  this.cam.updateMatrixWorld();const broadcast=this.camera!=='focus',pixels=this.camera==='overview'?(w<600?28:32):broadcast?(w<600?38:46):(w<600?34:40),bw=pixels*192/224;
  const scale=pixels*2*Math.tan(THREE.MathUtils.degToRad(this.cam.fov/2))/h,placed=[];
  for(const a of this.horses){
-  a.root.updateWorldMatrix(true,false);const anchor=a.root.localToWorld(V(0,2.75,0)).project(this.cam);
-  const visible=a.root.visible&&anchor.z>-1&&anchor.z<1&&Math.abs(anchor.x)<1.06&&Math.abs(anchor.y)<1.06;a.label.visible=a.labelLine.visible=visible;if(!visible)continue;
-  const ax=(anchor.x+1)*w/2,ay=(1-anchor.y)*h/2;let best=null;
-  // A short connector keeps the horse identifiable if crowded badges need to separate.
-  for(let row=0;row<5;row++)for(const col of [0,-1,1,-2,2,-3,3]){const x=Math.max(bw/2+5,Math.min(w-bw/2-5,ax+col*(bw+5))),y=Math.max(pixels+5,Math.min(h-5,ay-5-row*(pixels+5)));const rect={x:x-bw/2,y:y-pixels,w:bw,h:pixels};if(placed.some(p=>rect.x<p.x+p.w+3&&rect.x+rect.w+3>p.x&&rect.y<p.y+p.h+3&&rect.y+rect.h+3>p.y))continue;const cost=(x-ax)**2*1.15+(y-(ay-5))**2;if(!best||cost<best.cost)best={x,y,rect,cost};}
-  if(!best)best={x:Math.max(bw/2+5,Math.min(w-bw/2-5,ax)),y:Math.max(pixels+5,ay-5),rect:{x:ax-bw/2,y:ay-5-pixels,w:bw,h:pixels}};
-  placed.push(best.rect);const position=V(best.x/w*2-1,1-best.y/h*2,anchor.z).unproject(this.cam);a.label.position.copy(a.root.worldToLocal(position));a.label.scale.set(scale*192/224,scale,1);
-  const line=a.labelLine.geometry.attributes.position;line.setXYZ(0,0,2.75,0);line.setXYZ(1,...a.label.position.toArray());line.needsUpdate=true;a.labelLine.visible=Math.hypot(best.x-ax,best.y-ay)>9;
+  a.root.updateWorldMatrix(true,false);const anchor=a.root.getWorldPosition(V()).add(V(0,2.75,0)).project(this.cam);
+  const visible=a.root.visible&&anchor.z>-1&&anchor.z<1&&Math.abs(anchor.x)<1.06&&Math.abs(anchor.y)<1.06;a.label.visible=a.labelLine.visible=visible;if(!visible){a.numberLayout=null;continue}
+  const ax=(anchor.x+1)*w/2,ay=(1-anchor.y)*h/2,old=reset?null:a.numberLayout;
+  const candidate=(row,col)=>{const x=Math.max(bw/2+5,Math.min(w-bw/2-5,ax+col*(bw+5))),y=Math.max(pixels+5,Math.min(h-5,ay-5-row*(pixels+5)));return{x,y,row,col,rect:{x:x-bw/2,y:y-pixels,w:bw,h:pixels}}};
+  const clear=(p,gap=4)=>!placed.some(q=>p.rect.x<q.x+q.w+gap&&p.rect.x+p.rect.w+gap>q.x&&p.rect.y<q.y+q.h+gap&&p.rect.y+p.rect.h+gap>q.y);
+  let best=old?candidate(old.row,old.col):null;
+  // Keep a valid placement instead of reassigning rows on every acceleration frame.
+  if(!best||!clear(best)||this.time-old.changedAt>.8){
+   let choice=null;
+   for(let row=0;row<5;row++)for(const col of [0,-1,1,-2,2,-3,3]){
+    const p=candidate(row,col),same=old&&row===old.row&&col===old.col;
+    if(!clear(p,same?4:12))continue;
+    const cost=(p.x-ax)**2*1.15+(p.y-(ay-5))**2+(old&&!same?pixels*pixels*1.5:0);
+    if(!choice||cost<choice.cost)choice={...p,cost};
+   }
+   best=choice||(best&&clear(best)?best:candidate(0,0));
+  }
+  placed.push(best.rect);
+  const changed=!old||old.row!==best.row||old.col!==best.col;
+  const layout={row:best.row,col:best.col,changedAt:changed?this.time:old.changedAt,ax,ay,dx:best.x-ax,dy:best.y-ay};
+  if(old){
+   const follow=1-Math.exp(-dt*22),slide=1-Math.exp(-dt*10),limit=200*dt;
+   layout.ax=old.ax+(ax-old.ax)*follow;layout.ay=old.ay+(ay-old.ay)*follow;
+   for(const k of ['dx','dy'])layout[k]=old[k]+Math.max(-limit,Math.min(limit,(layout[k]-old[k])*slide));
+  }
+  a.numberLayout=layout;
+  const x=Math.max(bw/2+5,Math.min(w-bw/2-5,layout.ax+layout.dx)),y=Math.max(pixels+5,Math.min(h-5,layout.ay+layout.dy));
+  const position=V(x/w*2-1,1-y/h*2,anchor.z).unproject(this.cam);a.label.position.copy(a.root.worldToLocal(position));a.label.scale.set(scale*192/224,scale,1);
+  const line=a.labelLine.geometry.attributes.position,start=a.root.worldToLocal(V(a.root.position.x,2.75,a.root.position.z));line.setXYZ(0,...start.toArray());line.setXYZ(1,...a.label.position.toArray());line.needsUpdate=true;a.labelLine.visible=Math.hypot(x-ax,y-ay)>9;
  }
  }
 
  setState(s){if(!s)return;if(!this.state||s.code!==this.state.code||s.round!==this.state.round||s.tick<this.state.tick){this.visual=[];this.snap=true;this.leaderFollow=false}if(s.status==='lobby')this.leaderFollow=false;this.state=s;this.stateAt=this.time}
- setCamera(c){this.camera=c;this.snap=!this.previous}
- render(dt=.016){if(this.disposed)return;const w=this.canvas.clientWidth,h=this.canvas.clientHeight;if(!w||!h)return;if(this.width!==w||this.height!==h){this.width=w;this.height=h;this.webgl.setSize(w,h,false);this.cam.aspect=w/h;this.cam.updateProjectionMatrix()}
+ setCamera(c){if(c!==this.camera)this.labelReset=true;this.camera=c;this.snap=!this.previous}
+ render(dt=.016){if(this.disposed)return;const w=this.canvas.clientWidth,h=this.canvas.clientHeight;if(!w||!h)return;if(this.width!==w||this.height!==h){this.width=w;this.height=h;this.labelReset=true;this.webgl.setSize(w,h,false);this.cam.aspect=w/h;this.cam.updateProjectionMatrix()}
  dt=Math.min(.07,dt);this.time+=dt;const s=this.state;if(!s||!this.horses.length)return;const running=s.status==='running';let lead=0,tail=100;
  for(const horse of s.horses){const i=horse.slot;if(this.visual[i]==null||s.status==='lobby')this.visual[i]=horse.progress;const finishAge=horse.finish==null?0:Math.max(0,s.elapsed+(this.time-this.stateAt)*(this.playbackRate||1)-horse.finish),coast=horse.finish==null?0:horse.speed*.6*(1-Math.exp(-finishAge/.6));this.visual[i]+=(horse.progress+coast-this.visual[i])*(1-Math.exp(-dt*14));if(horse.active){lead=Math.max(lead,Math.min(100,this.visual[i]));tail=Math.min(tail,Math.min(100,this.visual[i]))}const a=this.horses[i];a.root.visible=horse.active||s.status==='lobby';const travel=this.visual[i]*12;const pose=coursePose(travel>1200?travel-1200:travel,(i-3.5)*2.6);a.pose=pose;a.root.position.set(pose.x,0,pose.z);a.root.rotation.y=pose.yaw;
  const rollingSpeed=horse.finish==null?horse.speed:horse.speed*Math.exp(-finishAge/.6);const moving=horse.active&&((running&&horse.finish==null)||(horse.finish!=null&&(this.visual[i]<100||rollingSpeed>.16)));const hz=moving?(1.25+rollingSpeed*.36):0;a.root.rotation.z+=((moving&&pose.bend ? .025 : 0)-a.root.rotation.z)*(1-Math.exp(-dt*5));
@@ -142,7 +163,7 @@ class RaceRenderer{
  else if(shot==='leader'){const dist=w/h<1.3?33:23;cameraPos=V(leader.x+leader.nx*dist+leader.tx*dist*.65,Math.max(12,dist*.52),leader.z+leader.nz*dist+leader.tz*dist*.65);target=V(leader.x,1.2,leader.z);this.cam.fov=46;}
  else if(shot==='front'){const dist=Math.max(19,12/(Math.tan(16*Math.PI/180)*w/h));cameraPos=V(leader.x+leader.tx*dist,3.5,leader.z+leader.tz*dist);target=V(leader.x-leader.tx*2,1.2,leader.z-leader.tz*2);this.cam.fov=32}
  else{const mobile=w/h<1.3,dist=Math.max(mobile?33:23,Math.min(120,span*.51+20));cameraPos=V(center.x+center.nx*dist+center.tx*dist*.65,Math.max(12,dist*.52),center.z+center.nz*dist+center.tz*dist*.65);target=V(center.x,1,center.z);this.cam.fov=46;}
- if(shot!=='overview')this.scene.fog.density=.0035;const blend=this.snap?1:1-Math.exp(-dt*5);this.cam.position.lerp(cameraPos,blend);this.look.lerp(target,blend);this.snap=false;this.cam.lookAt(this.look);this.cam.updateProjectionMatrix();const lit=shot==='leader'?leader:center;this.sun.position.set(lit.x-25,45,lit.z-20);this.sun.target.position.set(lit.x,0,lit.z);this.drawMap();this.updateLabels(w,h);this.webgl.render(this.scene,this.cam);
+ if(shot!=='overview')this.scene.fog.density=.0035;const blend=this.snap?1:1-Math.exp(-dt*5);this.cam.position.lerp(cameraPos,blend);this.look.lerp(target,blend);const resetLabels=this.snap||this.labelReset;this.snap=false;this.cam.lookAt(this.look);this.cam.updateProjectionMatrix();const lit=shot==='leader'?leader:center;this.sun.position.set(lit.x-25,45,lit.z-20);this.sun.target.position.set(lit.x,0,lit.z);this.drawMap();this.updateLabels(w,h,dt,resetLabels);this.labelReset=false;this.webgl.render(this.scene,this.cam);
  }
  start(){const loop=now=>{if(this.disposed)return;const dt=this.previous?(now-this.previous)/1000:0;this.previous=now;this.render(dt);this.animation=requestAnimationFrame(loop)};this.animation=requestAnimationFrame(loop)}
  dispose(){this.disposed=true;cancelAnimationFrame(this.animation);this.canvas.removeEventListener('webglcontextlost',this.onContextLost);this.scene.traverse(o=>{o.geometry?.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m?.map?.dispose();m?.dispose()})});this.webgl.dispose()}

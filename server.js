@@ -4,7 +4,7 @@ const crypto=require('crypto');
 const {Server}=require('socket.io');
 const {makeHorse,resetRace,stepRace}=require('./race-engine');
 const app=express(),server=http.createServer(app),io=new Server(server,{transports:['websocket','polling'],maxHttpBufferSize:16384});
-const rooms=new Map(),PORT=process.env.PORT||10000,VERSION='leader-camera-1';
+const rooms=new Map(),PORT=process.env.PORT||10000,VERSION='stable-labels-host-1';
 app.use(express.static(require('path').join(__dirname,'public'),{setHeaders(res,p){if(p.endsWith('.html')||p.endsWith('.js')||p.endsWith('.css'))res.setHeader('Cache-Control','no-cache')}}));
 app.get('/health',(_,res)=>res.json({ok:true,version:VERSION,rooms:rooms.size}));
 function roomCode(){let c;do{c=crypto.randomBytes(3).toString('hex').slice(0,5).toUpperCase()}while(rooms.has(c));return c}
