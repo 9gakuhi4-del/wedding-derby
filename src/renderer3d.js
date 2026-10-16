@@ -89,7 +89,7 @@ class RaceRenderer{
  const middle=(lead+tail)*.5*12,leaderZ=-lead*12,span=(lead-tail)*12;
  let cameraPos,target;
  if(this.camera==='focus'){const me=this.horses[this.selected]||this.horses[7];cameraPos=me.root.position.clone().add(V(2.9,3.9,7.4));target=me.root.position.clone().add(V(0,1.65,-6));this.cam.fov=52}
- else if(this.camera==='front'){cameraPos=V(1,4.6,leaderZ-24);target=V(0,1.3,leaderZ+5);this.cam.fov=48}
+ else if(this.camera==='front'){cameraPos=V(0,3.5,leaderZ-Math.max(19,12/(Math.tan(16*Math.PI/180)*w/h)));target=V(0,1.2,leaderZ+2);this.cam.fov=32}
  else{const mobile=w/h<1.3,dist=Math.max(mobile?39:27,Math.min(95,span*.55+24));cameraPos=V(dist,dist*.37,-middle-dist*.65);target=V(0,1,-middle);this.cam.fov=46;}
  const blend=this.snap?1:1-Math.exp(-dt*5);this.cam.position.lerp(cameraPos,blend);this.look.lerp(target,blend);this.snap=false;this.cam.lookAt(this.look);this.cam.updateProjectionMatrix();this.sun.position.set(-25,45,-middle-20);this.sun.target.position.set(0,0,-middle);this.webgl.render(this.scene,this.cam);
  }
