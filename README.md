@@ -20,6 +20,10 @@ Horse-number badges keep stable collision placements, ease movement between posi
 
 Final positions remain server-authoritative. Run-out animation and ceremony effects never change the winner. There is no finish-order override.
 
+## Optional natural finish
+
+**質感：標準／自然** switches only presentation. Standard remains the default and restores the previously accepted lighting, surface maps, horse roughness and mowing colours. Natural adds a softly graduated sky, slightly less ambient fill, material-specific coat/eye/mane roughness, fine turf bump and eight soft contact shadows. The choice is stored per device. Models, animation, input, server simulation, cameras and number layout are shared. No external assets or post-processing pass are required.
+
 ## Asset provenance
 
 `public/assets/3d/racehorse.glb` derives from **Rigged Horse**, by Lyndon Daniels, rigging by ChadM, CC0. Source: https://opengameart.org/content/rigged-horse . Texture node conversion, binding of mane/tail/eyes, normalization and a new gallop clip added here. No purchase or paid generation was used.

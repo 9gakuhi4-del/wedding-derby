@@ -44,7 +44,7 @@ function makeRider(slot){
 class RaceRenderer{
  constructor(canvas){this.canvas=canvas;this.camera='auto';this.selected=7;this.state=null;this.visual=[];this.time=0;this.previous=0;this.horses=[];this.disposed=false;this.reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
  this.webgl=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'high-performance'});this.webgl.setPixelRatio(Math.min(devicePixelRatio||1,1.5));this.webgl.shadowMap.enabled=true;this.webgl.shadowMap.type=THREE.PCFSoftShadowMap;this.webgl.outputColorSpace=THREE.SRGBColorSpace;this.webgl.toneMapping=THREE.ACESFilmicToneMapping;this.webgl.toneMappingExposure=1.05;
- this.scene=new THREE.Scene();this.scene.background=new THREE.Color('#c4d8df');this.scene.fog=new THREE.FogExp2('#c4d8df',.0035);this.cam=new THREE.PerspectiveCamera(46,1,.1,1800);this.cam.position.set(17,8,-26);this.look=V(0,1,-2);this.scene.add(new THREE.HemisphereLight('#dcecff','#51623a',2.1));this.sun=new THREE.DirectionalLight('#fff2dc',3.1);this.sun.position.set(-25,45,-20);this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);Object.assign(this.sun.shadow.camera,{left:-35,right:35,top:35,bottom:-35,near:1,far:150});this.sun.shadow.bias=-.0003;this.sun.shadow.normalBias=.025;this.scene.add(this.sun,this.sun.target);this.buildWorld();
+ this.scene=new THREE.Scene();this.scene.background=new THREE.Color('#c4d8df');this.scene.fog=new THREE.FogExp2('#c4d8df',.0035);this.cam=new THREE.PerspectiveCamera(46,1,.1,1800);this.cam.position.set(17,8,-26);this.look=V(0,1,-2);this.skyLight=new THREE.HemisphereLight('#dcecff','#51623a',2.1);this.scene.add(this.skyLight);this.sun=new THREE.DirectionalLight('#fff2dc',3.1);this.sun.position.set(-25,45,-20);this.sun.castShadow=true;this.sun.shadow.mapSize.set(2048,2048);Object.assign(this.sun.shadow.camera,{left:-35,right:35,top:35,bottom:-35,near:1,far:150});this.sun.shadow.bias=-.0003;this.sun.shadow.normalBias=.025;this.scene.add(this.sun,this.sun.target);this.buildWorld();
  this.onContextLost=e=>{e.preventDefault();document.getElementById('loadingDetail').textContent='3D描画が停止しました。再読み込みしてください。';document.getElementById('loading').classList.remove('hidden');document.getElementById('retryAssets').classList.remove('hidden');};canvas.addEventListener('webglcontextlost',this.onContextLost);
  }
  async init(onProgress=()=>{}){onProgress('馬の3Dモデルを読み込み中');const gltf=await new GLTFLoader().loadAsync('/assets/3d/racehorse.glb');
@@ -71,7 +71,7 @@ class RaceRenderer{
  // Track, mowing stripes and rails share the exact path used by the horses.
  const positions=[],uvs=[],colors=[],indices=[],steps=600;
  for(let i=0;i<=steps;i++){const d=i/steps*COURSE_LENGTH,c=new THREE.Color(Math.floor(Math.min(d,1199.99)/12)%2?'#9ba887':'#b2bb9d');for(const side of [-1,1]){const p=coursePose(d,side*TRACK_HALF_WIDTH);positions.push(p.x,0,p.z);uvs.push((side+1)*1.5,d/8);colors.push(c.r,c.g,c.b)}if(i<steps){const a=i*2;indices.push(a,a+1,a+2,a+1,a+3,a+2)}}
- const trackGeo=new THREE.BufferGeometry();trackGeo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));trackGeo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));trackGeo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));trackGeo.setIndex(indices);trackGeo.computeVertexNormals();const track=mesh(this.scene,trackGeo,new THREE.MeshStandardMaterial({map:grassTex,vertexColors:true,roughness:1,side:THREE.DoubleSide}));track.castShadow=false;
+ const trackGeo=new THREE.BufferGeometry();trackGeo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));trackGeo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));trackGeo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));trackGeo.setIndex(indices);trackGeo.computeVertexNormals();const track=mesh(this.scene,trackGeo,new THREE.MeshStandardMaterial({map:grassTex,vertexColors:true,roughness:1,side:THREE.DoubleSide}));track.castShadow=false;this.turf={grassTex,groundTex,ground,track,colors:new Float32Array(colors)};this.lookTextures=new Set([grassTex,groundTex]);
  const railMat=mat('#e8e9df',.55),postMat=mat('#a8b9a4'),dummy=new THREE.Object3D(),postCount=280;
  const posts=new THREE.InstancedMesh(new THREE.CylinderGeometry(.055,.07,1.15,8),postMat,postCount*2);
  for(let i=0;i<postCount;i++)for(let side=0;side<2;side++){const p=coursePose(i/postCount*COURSE_LENGTH,side?15:-15);dummy.position.set(p.x,.58,p.z);dummy.updateMatrix();posts.setMatrixAt(i*2+side,dummy.matrix)}posts.castShadow=true;this.scene.add(posts);
@@ -90,6 +90,39 @@ class RaceRenderer{
  for(let sec=0;sec<sections;sec++)for(let row=0;row<6;row++)for(let j=0;j<32;j++){dummy.position.set(standX-8+row*2,3.6+row*.75,-108+sec*100-j*2.7);dummy.scale.set(.3,.49,.3);dummy.rotation.set(0,0,0);dummy.updateMatrix();crowd.setMatrixAt(n,dummy.matrix);color.setHSL(rand(),.15+rand()*.4,.25+rand()*.4);crowd.setColorAt(n++,color)}this.scene.add(crowd);
  this.mapCanvas=document.getElementById('courseMap');this.mapCtx=this.mapCanvas?.getContext('2d');
  }
+ setLook(natural=false){
+ this.naturalLook=!!natural;
+ // Keep the accepted standard appearance intact; the natural finish is opt-in.
+ if(natural&&!this.naturalAssets){
+  const grass=texCanvas(512,512,(c,w,h)=>{
+   const rand=seeded(681);c.fillStyle='#65784a';c.fillRect(0,0,w,h);
+   // Broad colour variation breaks up tiling; fine blades retain texture close up.
+   for(let i=0;i<95;i++){const x=rand()*w,y=rand()*h,r=18+rand()*65;for(const dx of [-w,0,w])for(const dy of [-h,0,h]){const g=c.createRadialGradient(x+dx,y+dy,0,x+dx,y+dy,r);g.addColorStop(0,i%2?'#bac38e15':'#23382318');g.addColorStop(1,'#00000000');c.fillStyle=g;c.fillRect(x+dx-r,y+dy-r,r*2,r*2)}}
+   for(let i=0;i<42000;i++){const x=rand()*w,y=rand()*h,v=rand();c.strokeStyle=v<.45?'rgba(37,57,28,.22)':v<.8?'rgba(150,164,102,.26)':'rgba(183,178,119,.16)';c.lineWidth=.55+rand()*.6;c.beginPath();c.moveTo(x,y);c.lineTo(x+(rand()-.5)*2,y-1-rand()*4);c.stroke()}
+  });
+  grass.wrapS=grass.wrapT=THREE.RepeatWrapping;grass.anisotropy=Math.min(8,this.webgl.capabilities.getMaxAnisotropy());
+  const ground=grass.clone();ground.repeat.set(65,90);
+  const bump=grass.clone();bump.colorSpace=THREE.NoColorSpace;
+  const sky=texCanvas(8,256,(c,w,h)=>{const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#91aaba');g.addColorStop(.65,'#bbcbd1');g.addColorStop(1,'#d6ded9');c.fillStyle=g;c.fillRect(0,0,w,h)});
+  const contact=texCanvas(128,128,(c,w,h)=>{const g=c.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2);g.addColorStop(0,'rgba(17,28,15,.27)');g.addColorStop(.45,'rgba(17,28,15,.15)');g.addColorStop(1,'rgba(17,28,15,0)');c.fillStyle=g;c.fillRect(0,0,w,h)});
+  this.naturalAssets={grass,ground,bump,sky,contact};for(const t of Object.values(this.naturalAssets))this.lookTextures.add(t);
+  const contactMaterial=new THREE.MeshBasicMaterial({map:contact,transparent:true,depthWrite:false,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+  for(const a of this.horses){a.contact=new THREE.Mesh(new THREE.PlaneGeometry(2.1,3.4),contactMaterial);a.contact.rotation.x=-Math.PI/2;a.contact.position.copy(a.root.position);a.contact.position.y=.018;this.scene.add(a.contact)}
+ }
+ this.webgl.toneMappingExposure=natural?1.02:1.05;
+ this.skyLight.intensity=natural?1.75:2.1;this.skyLight.color.set(natural?'#e0e8ed':'#dcecff');this.skyLight.groundColor.set(natural?'#64705a':'#51623a');
+ this.sun.intensity=natural?3:3.1;this.sun.shadow.radius=natural?2:1;
+ this.scene.background=natural?this.naturalAssets.sky:new THREE.Color('#c4d8df');this.scene.fog.color.set(natural?'#cbd6d5':'#c4d8df');
+ const t=this.turf;t.track.material.map=natural?this.naturalAssets.grass:t.grassTex;t.track.material.bumpMap=natural?this.naturalAssets.bump:null;t.track.material.bumpScale=.012;t.track.material.needsUpdate=true;
+ t.ground.material.map=natural?this.naturalAssets.ground:t.groundTex;t.ground.material.needsUpdate=true;
+ const colors=t.track.geometry.attributes.color,mid=new THREE.Color('#a7b294'),color=new THREE.Color();
+ for(let i=0;i<colors.count;i++){color.fromArray(t.colors,i*3);if(natural)color.lerp(mid,.5);colors.setXYZ(i,color.r,color.g,color.b)}colors.needsUpdate=true;
+ for(const a of this.horses){
+  if(a.contact)a.contact.visible=natural&&a.root.visible;
+  a.model.traverse(o=>{if(!o.isMesh)return;for(const m of Array.isArray(o.material)?o.material:[o.material]){m.roughness=natural?(/eyes/i.test(m.name)?.22:/mane|tail/i.test(m.name)?.82:.52):.65;for(const texture of [m.map,m.normalMap])if(texture)texture.anisotropy=natural?Math.min(8,this.webgl.capabilities.getMaxAnisotropy()):1}});
+ }
+ }
+
  drawMap(){
  const c=this.mapCtx;if(!c)return;c.clearRect(0,0,360,180);c.fillStyle='#0a2119d9';c.fillRect(0,0,360,180);c.font='20px sans-serif';c.fillStyle='#e6c482';c.fillText('芝 1,200m · 1周',23,32);
  const point=p=>[180+p.z*.58,109+p.x*.58];c.beginPath();for(let i=0;i<=240;i++){const [x,y]=point(coursePose(i*5));i?c.lineTo(x,y):c.moveTo(x,y)}c.strokeStyle='#c4d3b65c';c.lineWidth=12;c.stroke();
@@ -138,7 +171,7 @@ class RaceRenderer{
  setCamera(c){if(c!==this.camera)this.labelReset=true;this.camera=c;this.snap=!this.previous}
  render(dt=.016){if(this.disposed)return;const w=this.canvas.clientWidth,h=this.canvas.clientHeight;if(!w||!h)return;if(this.width!==w||this.height!==h){this.width=w;this.height=h;this.labelReset=true;this.webgl.setSize(w,h,false);this.cam.aspect=w/h;this.cam.updateProjectionMatrix()}
  dt=Math.min(.07,dt);this.time+=dt;const s=this.state;if(!s||!this.horses.length)return;const running=s.status==='running';let lead=0,tail=100;
- for(const horse of s.horses){const i=horse.slot;if(this.visual[i]==null||s.status==='lobby')this.visual[i]=horse.progress;const finishAge=horse.finish==null?0:Math.max(0,s.elapsed+(this.time-this.stateAt)*(this.playbackRate||1)-horse.finish),coast=horse.finish==null?0:horse.speed*.6*(1-Math.exp(-finishAge/.6));this.visual[i]+=(horse.progress+coast-this.visual[i])*(1-Math.exp(-dt*14));if(horse.active){lead=Math.max(lead,Math.min(100,this.visual[i]));tail=Math.min(tail,Math.min(100,this.visual[i]))}const a=this.horses[i];a.root.visible=horse.active||s.status==='lobby';const travel=this.visual[i]*12;const pose=coursePose(travel>1200?travel-1200:travel,(i-3.5)*2.6);a.pose=pose;a.root.position.set(pose.x,0,pose.z);a.root.rotation.y=pose.yaw;
+ for(const horse of s.horses){const i=horse.slot;if(this.visual[i]==null||s.status==='lobby')this.visual[i]=horse.progress;const finishAge=horse.finish==null?0:Math.max(0,s.elapsed+(this.time-this.stateAt)*(this.playbackRate||1)-horse.finish),coast=horse.finish==null?0:horse.speed*.6*(1-Math.exp(-finishAge/.6));this.visual[i]+=(horse.progress+coast-this.visual[i])*(1-Math.exp(-dt*14));if(horse.active){lead=Math.max(lead,Math.min(100,this.visual[i]));tail=Math.min(tail,Math.min(100,this.visual[i]))}const a=this.horses[i];a.root.visible=horse.active||s.status==='lobby';const travel=this.visual[i]*12;const pose=coursePose(travel>1200?travel-1200:travel,(i-3.5)*2.6);a.pose=pose;a.root.position.set(pose.x,0,pose.z);a.root.rotation.y=pose.yaw;if(a.contact){a.contact.visible=this.naturalLook&&a.root.visible;a.contact.position.set(pose.x,.018,pose.z);a.contact.rotation.set(-Math.PI/2,0,-pose.yaw)}
  const rollingSpeed=horse.finish==null?horse.speed:horse.speed*Math.exp(-finishAge/.6);const moving=horse.active&&((running&&horse.finish==null)||(horse.finish!=null&&(this.visual[i]<100||rollingSpeed>.16)));const hz=moving?(1.25+rollingSpeed*.36):0;a.root.rotation.z+=((moving&&pose.bend ? .025 : 0)-a.root.rotation.z)*(1-Math.exp(-dt*5));
  // Drive skeleton and rider with the same cadence, derived from authoritative speed.
  if(a.action){a.action.timeScale=hz;a.action.weight+=((moving?1:0)-a.action.weight)*(1-Math.exp(-dt*5));a.mixer.update(dt*(this.playbackRate||1))}a.phase+=dt*hz*(this.playbackRate||1);const phase=a.phase*Math.PI*2;
@@ -163,9 +196,9 @@ class RaceRenderer{
  else if(shot==='leader'){const dist=w/h<1.3?33:23;cameraPos=V(leader.x+leader.nx*dist+leader.tx*dist*.65,Math.max(12,dist*.52),leader.z+leader.nz*dist+leader.tz*dist*.65);target=V(leader.x,1.2,leader.z);this.cam.fov=46;}
  else if(shot==='front'){const dist=Math.max(19,12/(Math.tan(16*Math.PI/180)*w/h));cameraPos=V(leader.x+leader.tx*dist,3.5,leader.z+leader.tz*dist);target=V(leader.x-leader.tx*2,1.2,leader.z-leader.tz*2);this.cam.fov=32}
  else{const mobile=w/h<1.3,dist=Math.max(mobile?33:23,Math.min(120,span*.51+20));cameraPos=V(center.x+center.nx*dist+center.tx*dist*.65,Math.max(12,dist*.52),center.z+center.nz*dist+center.tz*dist*.65);target=V(center.x,1,center.z);this.cam.fov=46;}
- if(shot!=='overview')this.scene.fog.density=.0035;const blend=this.snap?1:1-Math.exp(-dt*5);this.cam.position.lerp(cameraPos,blend);this.look.lerp(target,blend);const resetLabels=this.snap||this.labelReset;this.snap=false;this.cam.lookAt(this.look);this.cam.updateProjectionMatrix();const lit=shot==='leader'?leader:center;this.sun.position.set(lit.x-25,45,lit.z-20);this.sun.target.position.set(lit.x,0,lit.z);this.drawMap();this.updateLabels(w,h,dt,resetLabels);this.labelReset=false;this.webgl.render(this.scene,this.cam);
+ if(shot!=='overview')this.scene.fog.density=this.naturalLook?.003:.0035;const blend=this.snap?1:1-Math.exp(-dt*5);this.cam.position.lerp(cameraPos,blend);this.look.lerp(target,blend);const resetLabels=this.snap||this.labelReset;this.snap=false;this.cam.lookAt(this.look);this.cam.updateProjectionMatrix();const lit=shot==='leader'?leader:center;this.sun.position.set(lit.x-25,45,lit.z-20);this.sun.target.position.set(lit.x,0,lit.z);this.drawMap();this.updateLabels(w,h,dt,resetLabels);this.labelReset=false;this.webgl.render(this.scene,this.cam);
  }
  start(){const loop=now=>{if(this.disposed)return;const dt=this.previous?(now-this.previous)/1000:0;this.previous=now;this.render(dt);this.animation=requestAnimationFrame(loop)};this.animation=requestAnimationFrame(loop)}
- dispose(){this.disposed=true;cancelAnimationFrame(this.animation);this.canvas.removeEventListener('webglcontextlost',this.onContextLost);this.scene.traverse(o=>{o.geometry?.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m?.map?.dispose();m?.dispose()})});this.webgl.dispose()}
+ dispose(){this.disposed=true;cancelAnimationFrame(this.animation);this.canvas.removeEventListener('webglcontextlost',this.onContextLost);this.scene.traverse(o=>{o.geometry?.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m?.map?.dispose();m?.dispose()})});for(const t of this.lookTextures||[])t.dispose();this.webgl.dispose()}
 }
 window.RaceCourseSection=courseSection;window.RaceRenderer=RaceRenderer;window.RACE_COLORS=COLORS;window.RACE_INK=INK;
