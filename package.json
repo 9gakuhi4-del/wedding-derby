@@ -3,9 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "type": "commonjs",
-  "scripts": { "start": "node server.js" },
+  "scripts": {
+    "start": "node server.js",
+    "build": "esbuild src/renderer3d.js --bundle --minify --format=iife --outfile=public/renderer3d.js"
+  },
   "dependencies": {
     "express": "^5.1.0",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
   }
 }
