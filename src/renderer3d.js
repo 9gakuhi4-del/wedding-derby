@@ -113,7 +113,7 @@ class RaceRenderer{
  }
  }
 
- setState(s){if(!s)return;if(!this.state||s.code!==this.state.code||s.tick<this.state.tick){this.visual=[];this.snap=true}this.state=s;this.stateAt=this.time}
+ setState(s){if(!s)return;if(!this.state||s.code!==this.state.code||s.round!==this.state.round||s.tick<this.state.tick){this.visual=[];this.snap=true;this.leaderFollow=false}if(s.status==='lobby')this.leaderFollow=false;this.state=s;this.stateAt=this.time}
  setCamera(c){this.camera=c;this.snap=!this.previous}
  render(dt=.016){if(this.disposed)return;const w=this.canvas.clientWidth,h=this.canvas.clientHeight;if(!w||!h)return;if(this.width!==w||this.height!==h){this.width=w;this.height=h;this.webgl.setSize(w,h,false);this.cam.aspect=w/h;this.cam.updateProjectionMatrix()}
  dt=Math.min(.07,dt);this.time+=dt;const s=this.state;if(!s||!this.horses.length)return;const running=s.status==='running';let lead=0,tail=100;
@@ -127,14 +127,22 @@ class RaceRenderer{
  }
  if(tail>lead)tail=lead;this.gates.visible=s.status==='lobby'||s.status==='countdown'||(running&&lead<2);
  for(const {hinge,side}of this.gateDoors)hinge.rotation.y=-side*Math.min(1,s.elapsed/.45)*Math.PI*.55;
- const middle=(lead+tail)*.5*12,span=(lead-tail)*12,center=coursePose(middle),leader=coursePose(lead*12);
- let cameraPos,target;let shot=this.camera;if(shot==='auto')shot=s.status==='finished'||lead>=98?'finish':s.status==='lobby'?'wide':lead<17||lead>=50&&lead<67?'wide':Math.floor(s.elapsed/7)%2?'front':'wide';if(shot!==this.shot&&this.camera==='auto'){this.snap=true;this.shot=shot}
+ const middle=(lead+tail)*.5*12,span=(lead-tail)*12,center=coursePose(middle);
+ const first=s.horses.filter(h=>h.active).sort((a,b)=>(this.visual[b.slot]??b.progress)-(this.visual[a.slot]??a.progress)||a.slot-b.slot)[0];
+ const leader=first?this.horses[first.slot].pose:coursePose(lead*12);
+ // A stretched field should not pull the broadcast toward empty track between packs.
+ // Separate enter/exit thresholds prevent repeated cuts when the gap fluctuates.
+ this.leaderFollow=running&&(this.leaderFollow?span>28:span>42);
+ let cameraPos,target;let shot=this.camera;if(shot==='auto')shot=s.status==='finished'||lead>=98?'finish':s.status==='lobby'?'wide':this.leaderFollow?'leader':lead<17||lead>=50&&lead<67?'wide':Math.floor(s.elapsed/7)%2?'front':'wide';
+ if(shot==='wide'&&this.leaderFollow)shot='leader';
+ if(shot!==this.shot&&this.camera==='auto'){if(shot==='finish'||(shot!=='leader'&&this.shot!=='leader'))this.snap=true;this.shot=shot}
  if(shot==='overview'){cameraPos=V(340,420,80);target=V(0,0,0);this.cam.fov=64;this.scene.fog.density=.0008}
  else if(shot==='finish'){const p=coursePose(1200);cameraPos=V(p.x+37,8.5,p.z-10);target=V(p.x,1.6,p.z+6);this.cam.fov=50}
  else if(shot==='focus'){const selected=s.horses[this.selected]?.active?this.selected:[...s.horses].filter(h=>h.active).sort((a,b)=>b.progress-a.progress)[0]?.slot??7;const me=this.horses[selected],p=me.pose;cameraPos=V(p.x+p.nx*2.9-p.tx*7.4,3.9,p.z+p.nz*2.9-p.tz*7.4);target=V(p.x+p.tx*6,1.65,p.z+p.tz*6);this.cam.fov=52}
+ else if(shot==='leader'){const dist=w/h<1.3?33:23;cameraPos=V(leader.x+leader.nx*dist+leader.tx*dist*.65,Math.max(12,dist*.52),leader.z+leader.nz*dist+leader.tz*dist*.65);target=V(leader.x,1.2,leader.z);this.cam.fov=46;}
  else if(shot==='front'){const dist=Math.max(19,12/(Math.tan(16*Math.PI/180)*w/h));cameraPos=V(leader.x+leader.tx*dist,3.5,leader.z+leader.tz*dist);target=V(leader.x-leader.tx*2,1.2,leader.z-leader.tz*2);this.cam.fov=32}
  else{const mobile=w/h<1.3,dist=Math.max(mobile?33:23,Math.min(120,span*.51+20));cameraPos=V(center.x+center.nx*dist+center.tx*dist*.65,Math.max(12,dist*.52),center.z+center.nz*dist+center.tz*dist*.65);target=V(center.x,1,center.z);this.cam.fov=46;}
- if(shot!=='overview')this.scene.fog.density=.0035;const blend=this.snap?1:1-Math.exp(-dt*5);this.cam.position.lerp(cameraPos,blend);this.look.lerp(target,blend);this.snap=false;this.cam.lookAt(this.look);this.cam.updateProjectionMatrix();this.sun.position.set(center.x-25,45,center.z-20);this.sun.target.position.set(center.x,0,center.z);this.drawMap();this.updateLabels(w,h);this.webgl.render(this.scene,this.cam);
+ if(shot!=='overview')this.scene.fog.density=.0035;const blend=this.snap?1:1-Math.exp(-dt*5);this.cam.position.lerp(cameraPos,blend);this.look.lerp(target,blend);this.snap=false;this.cam.lookAt(this.look);this.cam.updateProjectionMatrix();const lit=shot==='leader'?leader:center;this.sun.position.set(lit.x-25,45,lit.z-20);this.sun.target.position.set(lit.x,0,lit.z);this.drawMap();this.updateLabels(w,h);this.webgl.render(this.scene,this.cam);
  }
  start(){const loop=now=>{if(this.disposed)return;const dt=this.previous?(now-this.previous)/1000:0;this.previous=now;this.render(dt);this.animation=requestAnimationFrame(loop)};this.animation=requestAnimationFrame(loop)}
  dispose(){this.disposed=true;cancelAnimationFrame(this.animation);this.canvas.removeEventListener('webglcontextlost',this.onContextLost);this.scene.traverse(o=>{o.geometry?.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m?.map?.dispose();m?.dispose()})});this.webgl.dispose()}
