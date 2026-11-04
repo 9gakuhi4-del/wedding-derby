@@ -20,6 +20,12 @@ Horse-number badges keep stable collision placements, ease movement between posi
 
 Final positions remain server-authoritative. Run-out animation and ceremony effects never change the winner. There is no finish-order override.
 
+## Manual fanfare
+
+The host's **♪ ファンファーレ** button (also inside **全画面**) plays the supplied 21.6-second cue on that device only. A practice-mode button allows a sound check. Audio is prefetched for the host/practice screen, never auto-played, and is not downloaded by riders just for joining. The same button cancels loading or stops playback; repeated clicks cannot layer sounds. **発走** remains separate and is disabled during loading/playback. Ending the cue never starts a race. Muting, disconnecting, leaving the page or entering a race cancels the cue, including a late asynchronous load. A failed load leaves racing available and can be retried. Run `node check-fanfare.cjs` for the audio and control regression checks.
+
+`public/assets/audio/fanfare.mp3` was supplied by the user on 2026-11-05. The original 27.17-second decoded recording is trimmed to 2.30–23.90 seconds, leaving approximately 0.10 seconds before the first note and 0.27 seconds after the tail. No musical content is replaced. This supplied cue is distinct from the original generated race score below; no CC0 or original-composition claim is made for the supplied recording.
+
 ## Optional natural finish
 
 **質感：標準／自然** switches only presentation. Standard remains the default and restores the previously accepted lighting, surface maps, horse roughness and mowing colours. Natural adds a softly graduated sky, slightly less ambient fill, material-specific coat/eye/mane roughness, fine turf bump and eight soft contact shadows. The choice is stored per device. Models, animation, input, server simulation, cameras and number layout are shared. No external assets or post-processing pass are required.

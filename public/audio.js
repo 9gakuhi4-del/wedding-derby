@@ -1,8 +1,8 @@
-/* Original orchestral score; all playback follows the displayed race state. */
+/* Race score follows state; the host's supplied fanfare is a separate, manual cue. */
 (()=>{'use strict';
 class RaceAudio {
- constructor({enabled=true,onChange=()=>{},onError=()=>{}}={}) {
-  Object.assign(this,{on:enabled,onChange,onError,ctx:null,buffer:null,loop:null,loading:null,key:'',nodes:new Set(),lastBeep:null,lastHoof:0});
+ constructor({enabled=true,onChange=()=>{},onError=()=>{},onFanfareChange=()=>{}}={}) {
+  Object.assign(this,{on:enabled,onChange,onError,onFanfareChange,ctx:null,buffer:null,loop:null,loading:null,key:'',nodes:new Set(),lastBeep:null,lastHoof:0,fanfareBuffer:null,fanfareLoading:null,fanfareState:'idle',fanfareNode:null,fanfareRequest:0});
  }
  init() {
   if(!this.ctx){
@@ -23,8 +23,49 @@ class RaceAudio {
   this.on=value;
   if(value)this.init();
   if(this.ctx){this.master.gain.cancelScheduledValues(this.ctx.currentTime);this.master.gain.setTargetAtTime(value?.65:0,this.ctx.currentTime,.015)}
-  if(!value)this.reset();
+  if(!value){this.stopFanfare();this.reset();}
   this.onChange();
+ }
+ loadFanfare(){
+  if(this.fanfareBuffer)return Promise.resolve(this.fanfareBuffer);
+  if(this.fanfareLoading)return this.fanfareLoading;
+  this.init();
+  if(!this.ctx)return Promise.reject(new Error('Audio unavailable'));
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
+  this.fanfareLoading=fetch('/assets/audio/fanfare.mp3?v=fanfare-1',{signal:controller.signal})
+   .then(r=>{if(!r.ok)throw Error('fanfare');return r.arrayBuffer()})
+   .then(data=>this.ctx.decodeAudioData(data)).then(buffer=>{this.fanfareBuffer=buffer;return buffer})
+   .finally(()=>{clearTimeout(timeout);this.fanfareLoading=null});
+  return this.fanfareLoading;
+ }
+ async playFanfare(){
+  if(this.fanfareState!=='idle')return false;
+  const request=++this.fanfareRequest;
+  this.fanfareState='loading';this.onFanfareChange();
+  try{
+   this.setEnabled(true);this.reset(0);
+   if(!this.ctx)throw Error('Audio unavailable');
+   // Resume in the button gesture; a cancelled asynchronous load must never play later.
+   await Promise.all([this.ctx.resume(),this.loadFanfare()]);
+   if(request!==this.fanfareRequest||!this.on)return false;
+   if(this.ctx.state!=='running')throw Error('Audio suspended');
+   this.fanfareState='playing';
+   this.fanfareNode=this.source(this.fanfareBuffer,this.ctx.currentTime+.02,0,{volume:.92,fade:.008,onEnded:()=>{
+    if(request!==this.fanfareRequest)return;
+    this.fanfareNode=null;this.fanfareState='idle';this.key='';this.onFanfareChange();
+   }});
+   this.onFanfareChange();return true;
+  }catch(error){
+   if(request===this.fanfareRequest){this.fanfareNode=null;this.fanfareState='idle';this.onFanfareChange();this.onError('ファンファーレを再生できませんでした。通信・音声設定を確認し、もう一度押してください');}
+   return false;
+  }
+ }
+ stopFanfare(){
+  if(this.fanfareState==='idle')return;
+  ++this.fanfareRequest;
+  const node=this.fanfareNode;this.fanfareNode=null;this.fanfareState='idle';
+  if(node){const now=this.ctx.currentTime;node.gain.gain.cancelScheduledValues(now);node.gain.gain.setTargetAtTime(0,now,.008);try{node.source.stop(now+.025)}catch{}}
+  this.key='';this.onFanfareChange();
  }
  prepareLoop(){
   // 144 BPM: two-bar opening, then a bar-aligned loop with a one-bar crossfade.
@@ -37,10 +78,10 @@ class RaceAudio {
    dst.set(src.subarray(from+fade,end-fade),fade);
   }
  }
- source(buffer,when,offset=0,{loop=false,duration,volume=.62,fade=.08}={}){
+ source(buffer,when,offset=0,{loop=false,duration,volume=.62,fade=.08,onEnded=()=>{}}={}){
   const source=this.ctx.createBufferSource(),gain=this.ctx.createGain();source.buffer=buffer;source.loop=loop;source.connect(gain);gain.connect(this.master);
   gain.gain.setValueAtTime(0,when);gain.gain.linearRampToValueAtTime(volume,when+fade);
-  const node={source,gain};this.nodes.add(node);source.onended=()=>{this.nodes.delete(node);source.disconnect();gain.disconnect()};
+  const node={source,gain};this.nodes.add(node);source.onended=()=>{this.nodes.delete(node);source.disconnect();gain.disconnect();onEnded()};
   if(duration==null)source.start(when,offset);else source.start(when,offset,duration);
   return node;
  }
@@ -67,6 +108,7 @@ class RaceAudio {
   const node={source,gain};this.nodes.add(node);source.onended=()=>{this.nodes.delete(node);source.disconnect();gain.disconnect()};source.start(now);source.stop(now+duration);
  }
  tick(state,{replayKey='',offset=0}={}){
+  if(this.fanfareState!=='idle'){if(!state||state.status!=='lobby'||replayKey)this.stopFanfare();else return;}
   if(!state||!this.on||this.ctx?.state!=='running'||!this.buffer)return;
   const phase=state.finishOrder.length||state.status==='finished'?'result':['running','countdown'].includes(state.status)?'race':'lobby';
   const key=state.code+':'+state.round+':'+replayKey+':'+phase;

@@ -26,3 +26,7 @@
 .stageHostControls{display:none;position:absolute;left:2%;top:calc(16% + 104px);width:190px;gap:10px;padding:13px;background:#0b2119e8;border:1px solid #e6c48266;border-radius:9px;pointer-events:auto;z-index:3}
 .stage:fullscreen .stageHostControls{display:grid}.stageHostControls>span{font-size:12px;line-height:1.6;color:#eee4ce}.stageHostControls button{font-size:17px;min-height:48px}.stageHostControls button:disabled{opacity:.6}
 @media(max-width:700px){.stageHostControls{top:calc(19% + 68px);width:150px;padding:9px;gap:7px}.stageHostControls>span{font-size:10px}.stageHostControls button{font-size:14px;min-height:42px}}
+
+/* Manual venue cue; the fullscreen host panel retains both cue and start controls. */
+.hostActions{flex-wrap:wrap}.fanfareButton{border-color:#e6c48288;color:#f0d8a5;white-space:nowrap}.fanfareButton[aria-pressed="true"]{background:#69532b;color:#fff4d9}.stageHostControls{width:220px}.stageHostControls .fanfareButton{font-size:14px;padding:10px 8px}.practiceBar{flex-wrap:wrap}.practiceBar #practiceFanfareBtn{margin-left:auto}.practiceBar #practiceReset{margin-left:0}
+@media(max-width:700px){.stageHostControls{width:170px}.stageHostControls .fanfareButton{font-size:12px}}
