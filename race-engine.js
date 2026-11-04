@@ -1,13 +1,37 @@
 'use strict';
-function makeHorse(slot){return{slot,name:slot===7?'新婦':`ゲスト${slot+1}`,female:[1,4,7].includes(slot),bride:slot===7,token:null,socketId:null,ready:false,active:true,progress:0,stamina:100,speed:0,effort:0,tapQueue:0,acceptedTaps:0,lastInputTick:-1000,finish:null,conserve:false,lastAcceptedTick:-1000}}
-function resetRace(r){r.status='lobby';r.startAt=null;r.elapsed=0;r.tick=0;r.finishOrder=[];for(const h of r.horses)Object.assign(h,{ready:false,active:true,progress:0,stamina:100,speed:0,effort:0,tapQueue:0,acceptedTaps:0,lastInputTick:-1000,finish:null,conserve:false,lastAcceptedTick:-1000})}
-function stepRace(r,dt){r.tick++;r.elapsed=r.tick*dt;const finishers=[];for(const h of r.horses){if(!h.active||h.finish!=null)continue;
- if(r.practice&&h.slot!==7){const strategy=[20,25,32,36,28,24,38][h.slot];h.conserve=h.stamina<strategy&&h.progress<75;if(!h.conserve&&r.tick%(5+h.slot%3)===0)h.tapQueue=1;}
- let accepted=0;if(h.tapQueue>0&&r.tick-h.lastAcceptedTick>=3){accepted=1;h.tapQueue--;h.lastAcceptedTick=r.tick;h.acceptedTaps++;h.lastInputTick=r.tick;}
- h.effort=Math.max(0,h.effort-dt*(h.conserve?5:1.8));if(accepted)h.effort=Math.min(1,h.effort+.4);
- const drain=h.effort>.25?6.8*h.effort:-5.2;h.stamina=Math.max(0,Math.min(100,h.stamina-dt*drain));
- const strength=.50+.50*Math.min(1,h.stamina/24),target=(h.conserve?1.48:1.9+2.35*h.effort)*strength;
- h.speed+=(target-h.speed)*Math.min(1,dt*4.5);const old=h.progress;h.progress=Math.min(100,old+h.speed*dt);
- if(h.progress>=100){h.finish=r.elapsed-dt+(100-old)/h.speed;finishers.push(h)}
- }finishers.sort((a,b)=>a.finish-b.finish||a.slot-b.slot);r.finishOrder.push(...finishers.map(h=>h.slot));if(r.horses.every(h=>!h.active||h.finish!=null))r.status='finished';}
-module.exports={makeHorse,resetRace,stepRace};
+const CONFIG=require('./race-config.cjs');
+const FINAL_START=(CONFIG.distance-CONFIG.homeStraight)/CONFIG.distance*100;
+function makeHorse(slot){return{slot,name:slot===7?'新婦':`ゲスト${slot+1}`,female:[1,4,7].includes(slot),bride:slot===7,token:null,socketId:null,ready:false,active:true,progress:0,stamina:100,reserve:0,spurt:false,speed:0,effort:0,tapQueue:0,acceptedTaps:0,lastInputTick:-1000,finish:null,conserve:false,lastAcceptedTick:-1000}}
+function resetRace(r){r.status='lobby';r.startAt=null;r.elapsed=0;r.tick=0;r.finishOrder=[];for(const h of r.horses)Object.assign(h,{ready:false,active:true,progress:0,stamina:100,reserve:0,spurt:false,speed:0,effort:0,tapQueue:0,acceptedTaps:0,lastInputTick:-1000,finish:null,conserve:false,lastAcceptedTick:-1000})}
+function practiceInput(h,tick){
+ // Input plans only; no slot-specific stats, luck or rank-based catch-up.
+ const chargeAt=[34,40,47,37,51,44,31][h.slot],launchAt=[66.7,68,71,65,74,69,64][h.slot];
+ if(h.progress>=chargeAt&&h.progress<launchAt){h.conserve=true;h.tapQueue=0;h.effort=0;}
+ else{h.conserve=false;if(tick%4===0)h.tapQueue=1;}
+}
+function stepRace(r,dt){
+ r.tick++;r.elapsed=r.tick*dt;const finishers=[];
+ for(const h of r.horses){
+  if(!h.active||h.finish!=null)continue;
+  if(r.practice&&h.slot!==7)practiceInput(h,r.tick);
+  let accepted=0;
+  if(h.tapQueue>0&&r.tick-h.lastAcceptedTick>=3){accepted=1;h.tapQueue--;h.lastAcceptedTick=r.tick;h.acceptedTaps++;h.lastInputTick=r.tick;}
+  h.effort=Math.max(0,h.effort-dt*(h.conserve?5:1.8));if(accepted)h.effort=Math.min(1,h.effort+.4);
+  const final=h.progress>=FINAL_START;
+  // Explicitly easing off before the straight banks a finite finishing reserve.
+  if(!final)h.reserve=Math.max(0,Math.min(100,h.reserve+dt*(h.conserve?3.2:-.65*h.effort)));
+  const boost=final&&!h.conserve&&h.effort>.25?1.65*Math.min(1,h.reserve/22)*Math.min(1,h.stamina/28)*h.effort:0;
+  h.spurt=boost>.15;
+  if(boost>0)h.reserve=Math.max(0,h.reserve-dt*8*h.effort);
+  const drain=h.conserve?-5.2:h.effort>.25?6.2*h.effort+boost*1.5:-2;
+  h.stamina=Math.max(0,Math.min(100,h.stamina-dt*drain));
+  const strength=.50+.50*Math.min(1,h.stamina/24);
+  const target=((h.conserve?2.35:2.45+1.4*h.effort)*strength+boost)*CONFIG.speedScale;
+  h.speed+=(target-h.speed)*Math.min(1,dt*4.5);
+  const old=h.progress;h.progress=Math.min(100,old+h.speed*dt);
+  if(h.progress>=100){h.finish=r.elapsed-dt+(100-old)/h.speed;h.spurt=false;finishers.push(h);}
+ }
+ finishers.sort((a,b)=>a.finish-b.finish||a.slot-b.slot);r.finishOrder.push(...finishers.map(h=>h.slot));
+ if(r.horses.every(h=>!h.active||h.finish!=null))r.status='finished';
+}
+module.exports={makeHorse,resetRace,stepRace,FINAL_START};

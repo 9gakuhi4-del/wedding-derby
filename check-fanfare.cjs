@@ -16,7 +16,7 @@ function harness({fail=false,delayed=false,blocked=false}={}){
   createBuffer(ch,n,rate){return{duration:n/rate,numberOfChannels:ch,sampleRate:rate,length:n,getChannelData:()=>new Float32Array(n)}}
   decodeAudioData(data){return Promise.resolve(buffer(data==='fanfare'?21.6:28.6))}
  }
- const context={window:{AudioContext:AC},AbortController,setTimeout,clearTimeout,performance:{now:()=>0},Date,console,fetch:async url=>{
+ const context={window:{AudioContext:AC,RACE_CONFIG:require('./race-config.cjs')},AbortController,setTimeout,clearTimeout,performance:{now:()=>0},Date,console,fetch:async url=>{
   requests.push(url);if(url.includes('fanfare')){await wait;if(fail)throw Error('network');return{ok:true,arrayBuffer:async()=> 'fanfare'}}
   return{ok:true,arrayBuffer:async()=> 'score'};
  }};
@@ -55,7 +55,8 @@ const running={...lobby,status:'running',elapsed:2};
  const socket={connected:true,on:(e,fn)=>handlers[e]=fn,timeout(){return this},emit(e,data,cb){calls.push(e);cb?.(null,{ok:true})}};
  Object.assign(h.context,{RaceAudio:h.context.window.RaceAudio,RacePresentation:class{update(){}},io:()=>socket,URLSearchParams,location:{search:'',origin:'http://localhost'},localStorage:{getItem:()=>null,setItem(){}},document:{getElementById:get,body:{classList:{toggle(){}},appendChild(){}},addEventListener(){},activeElement:null},requestAnimationFrame(){}});
  h.context.window.addEventListener=(e,fn)=>handlers[e]=fn;
- const expose="window.test={audio,set(o){if(o.mode!==undefined)mode=o.mode;if(o.room!==undefined)room=o.room;if(o.ready!==undefined)assetsReady=o.ready;if(o.replay!==undefined)replay=o.replay;},renderHostControls,toggleFanfare,startRace};";
+ h.context.window.RACE_COLORS=['#2774d8','#df7fb5','#d43f3e','#e9cf59','#8462b4','#29977c','#e99b3b','#f4f0e6'];h.context.window.RACE_INK=['#fff','#201d27','#fff','#23271b','#fff','#fff','#221c13','#28251d'];
+ const expose="window.test={audio,set(o){if(o.slot!==undefined)mySlot=o.slot;if(o.mode!==undefined)mode=o.mode;if(o.room!==undefined)room=o.room;if(o.ready!==undefined)assetsReady=o.ready;if(o.replay!==undefined)replay=o.replay;},render,renderHostControls,toggleFanfare,startRace};";
  vm.runInContext(gameCode.replace(/\}\)\(\);\s*$/,expose+'})();'),h.context);
  const t=h.context.window.test,room={...lobby,horses:Array.from({length:8},(_,slot)=>({slot,connected:true,ready:true,active:true,name:'Test',progress:0})),practice:false};
  t.set({mode:'host',room,ready:true});t.renderHostControls();assert.equal(get('startBtn').disabled,false);assert.equal(get('stageStartBtn').disabled,false);assert.equal(get('stageFanfareBtn').disabled,false);
@@ -72,5 +73,10 @@ const running={...lobby,status:'running',elapsed:2};
  const stage=html.indexOf('id="stage"'),cue=html.indexOf('id="stageFanfareBtn"'),afterStage=html.indexOf('id="replayBar"');assert(stage<cue&&cue<afterStage,'fullscreen cue must be inside stage');
  assert.match(fs.readFileSync('public/game.css','utf8'),/\.stage:fullscreen \.stageHostControls\{display:grid\}/);
  assert.equal(calls.filter(e=>e==='startRace').length,1,'fanfare never automatically starts a race');
- console.log('PASS: silent preload; one-shot cue; no duplicate audio; cancellation during load/play; mute; natural end; BGM/replay transition; download/autoplay failures; host/practice roles; fullscreen containment; start lock; disconnect; unchanged manual start.');
+ // The actual player HUD reads the same authoritative reserve used by the engine.
+ h.context.window.RaceCourseSection=d=>d>=1200?'最後の直線':'向正面';socket.connected=true;
+ const playerRoom={...room,status:'running',horses:room.horses.map(x=>({...x,progress:70,stamina:65,reserve:54,spurt:true,effort:1,speed:3,finish:null,acceptedTaps:100,conserve:false}))};
+ t.set({mode:'player',room:playerRoom,slot:7});t.render();assert.equal(get('reserveValue').textContent,'54%');assert.equal(get('reserveFill').style.width,'54%');assert.equal(get('reserveStatus').textContent,'発動中');assert(get('controller').classList.contains('spurting'));assert.equal(get('playerDistance').textContent,'1260 / 1800m');assert.equal(get('distance').innerHTML,'540 <small>m</small>');assert.match(get('paceAdvice').textContent,/末脚発動/);assert.match(get('broadcastText').textContent,/最後の直線/);
+ playerRoom.horses[7].spurt=false;playerRoom.horses[7].reserve=0;t.render();assert.equal(get('reserveStatus').textContent,'末脚なし');assert(!get('controller').classList.contains('spurting'));
+ console.log('PASS: 1800m player HUD and reserve; silent preload; one-shot cue; no duplicate audio; cancellation during load/play; mute; natural end; BGM/replay transition; download/autoplay failures; host/practice roles; fullscreen containment; start lock; disconnect; unchanged manual start.');
 })().catch(e=>{console.error(e);process.exitCode=1});

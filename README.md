@@ -6,7 +6,13 @@ Eight-player, server-authoritative wedding racing game. Bride is slot 8; slots 2
 
 `npm install` then `npm start`. Default port: 10000. `npm run build` rebuilds the committed renderer bundle. `node check-live.cjs` runs a local eight-player round, reconnection, readiness and reset integration check. `node check.cjs` checks deterministic race outcomes, input effects, stamina and inactive slots.
 
-The renderer uses an actual skinned GLB horse with an authored gallop, 3D riders, dress and veil, physically lit turf, rails, grandstands and three camera views. Buttons change the server simulation; world positions and gait speed follow those same states. Replay uses recorded race states. The 1,200 m closed oval has two 200 m bends and two 400 m straights; the final 400 m is the home straight. Horses, rails, distance markers, camera direction and the live course map share one path function. Lane offsets are visual only: every horse retains the same authoritative progress and finish rules. `node check-course.mjs` verifies the lap geometry and its joins.
+The renderer uses an actual skinned GLB horse with an authored gallop, 3D riders, dress and veil, physically lit turf, rails, grandstands and three camera views. Buttons change the server simulation; world positions and gait speed follow those same states. Replay uses recorded race states. The 1,800 m closed oval has two 300 m bends and two 600 m straights; the final 600 m is the home straight. Horses, rails, distance markers, camera direction and the live course map share one path function. Lane offsets are visual only: every horse retains the same authoritative progress and finish rules. `node check-course.mjs` verifies the lap geometry and its joins.
+
+## Closing strategy (1,800 m)
+
+All eight horses have identical stats, including the bride. There are no random speed rolls, slot bonuses or rank-based catch-up. Early positioning matters: press **追う**, then use **控える** in the middle of the race to recover stamina and bank a finite **末脚** reserve. Pressing **追う** during the final 600 m spends that reserve for a closing burst. Idle horses do not bank reserve; the home straight cannot generate new reserve; waiting too long wastes the chance to use it. The player HUD shows reserve and its activation. Practice opponents follow varied deterministic input plans, not special abilities.
+
+`race-config.cjs` is shared by the server, course, renderer and HUD. `node check-balance.cjs` checks a visible final-straight comeback, deterministic outcomes, identical slot stats, finite reserve, late-launch penalties, and the possibility of a managed front-runner beating excessive waiting. `node check-renderer.cjs` exercises the actual built world geometry, map and camera/number calculations without GPU rendering; it does not replace a real-device WebGL rehearsal.
 
 ## Wedding-day flow
 
