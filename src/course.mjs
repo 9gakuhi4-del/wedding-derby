@@ -1,5 +1,5 @@
 import CONFIG from '../race-config.cjs';
-// One closed 1,800 m lap: 300 m bend, 600 m straight, repeated.
+// One closed 1,400 m lap: 200 m bend, 500 m straight, repeated.
 export const COURSE_LENGTH=CONFIG.distance;
 export const HOME_STRAIGHT=CONFIG.homeStraight;
 export const BEND_LENGTH=CONFIG.bendLength;

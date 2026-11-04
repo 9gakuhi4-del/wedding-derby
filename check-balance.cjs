@@ -4,35 +4,57 @@ const CONFIG=require('./race-config.cjs');
 const {makeHorse,resetRace,stepRace,FINAL_START}=require('./race-engine');
 const tap=(h,t,interval=4)=>{h.conserve=false;if(t%interval===0)h.tapQueue=1;};
 const hold=h=>{h.conserve=true;h.effort=0;h.tapQueue=0;};
-const closer=(save=35,launch=FINAL_START)=>(h,t)=>h.progress>=save&&h.progress<launch?hold(h):tap(h,t);
-const front=(h,t)=>h.stamina<30?hold(h):tap(h,t);
-function run(policies){
- const r={practice:false,horses:policies.map((_,i)=>makeHorse(i))};resetRace(r);r.status='running';
- const checkpoints=policies.map(()=>({})),spurt=policies.map(()=>false);let crossing=null;
+const saveAndLaunch=(save=35,launch=FINAL_START)=>(h,t)=>h.progress>=save&&h.progress<launch?hold(h):tap(h,t);
+const paceFront=(h,t)=>h.stamina<30?hold(h):tap(h,t);
+function run(plans,{practice=false,validate=true}={}){
+ const r={practice,horses:plans.map(p=>makeHorse(p.slot))};resetRace(r);r.status='running';
+ const checkpoints=plans.map(()=>({})),spurts=plans.map(()=>false);let crossing=null;
  for(let t=0;t<3000&&r.status==='running';t++){
-  const previous=r.horses.map(h=>({...h}));r.horses.forEach((h,i)=>{if(h.finish==null)policies[i](h,t)});stepRace(r,.05);
-  r.horses.forEach((h,i)=>{
+  const previous=r.horses.map(h=>({...h}));
+  r.horses.forEach((h,i)=>{if(h.finish==null&&(!practice||h.slot===7))plans[i].policy(h,t)});
+  stepRace(r,.05);
+  if(validate)r.horses.forEach((h,i)=>{
    assert(h.stamina>=0&&h.stamina<=100);assert(h.reserve>=0&&h.reserve<=100);assert(h.progress>=previous[i].progress&&h.progress<=100);
-   assert(h.progress-previous[i].progress<.2,'no catch-up teleport');assert(h.speed<=CONFIG.maxPace*CONFIG.speedScale);
-   if(previous[i].progress>=FINAL_START)assert(h.reserve<=previous[i].reserve,'no reserve generation in the home straight');
-   if(h.spurt){assert(previous[i].progress>=FINAL_START);assert(!h.conserve);spurt[i]=true;}
-   for(const pct of [50,FINAL_START,90])if(!checkpoints[i][pct]&&h.progress>=pct)checkpoints[i][pct]={time:r.elapsed,reserve:h.reserve,stamina:h.stamina};
+   assert(h.progress-previous[i].progress<=CONFIG.maxPace*CONFIG.speedScale*.05+1e-9,'no catch-up teleport');assert(h.speed<=CONFIG.maxPace*CONFIG.speedScale);
+   if(previous[i].progress>=FINAL_START)assert(h.reserve<=previous[i].reserve,'no reserve generation on home straight');
+   if(h.spurt){assert(previous[i].progress>=FINAL_START);assert(!h.conserve);spurts[i]=true;}
+   for(const pct of [25,50,FINAL_START,90])if(!checkpoints[i][pct]&&h.progress>=pct)checkpoints[i][pct]={time:r.elapsed,reserve:h.reserve,stamina:h.stamina};
   });
-  if(policies.length>1&&r.horses[0].progress>=FINAL_START&&r.horses[0].progress>r.horses[1].progress&&crossing==null)crossing=r.horses[0].progress*CONFIG.distance/100;
+  const closer=r.horses.find(h=>h.slot===2),front=r.horses.find(h=>h.slot===0);
+  if(closer&&front&&closer.progress>=FINAL_START&&closer.progress>front.progress&&crossing==null)crossing=closer.progress*CONFIG.distance/100;
  }
- assert.equal(r.status,'finished');return{r,checkpoints,spurt,crossing};
+ assert.equal(r.status,'finished');return{r,checkpoints,spurts,crossing};
 }
-const mixed=run([closer(),front,(h,t)=>tap(h,t,3),()=>{},hold,closer(35,85),(h,t)=>tap(h,t,6),closer(0)]);
-assert(mixed.checkpoints[0][FINAL_START].time>mixed.checkpoints[1][FINAL_START].time,'closer must enter the straight behind a managed front-runner');
-assert(mixed.r.horses[0].finish+2<mixed.r.horses[1].finish,'saved reserve should favor a well-timed closer');
-assert(mixed.crossing>CONFIG.distance-CONFIG.homeStraight&&mixed.crossing<CONFIG.distance,'comeback must occur visibly on the home straight');
-assert.equal(mixed.r.finishOrder[0],0);assert(mixed.spurt[0]);assert(!mixed.spurt[3]&&!mixed.spurt[4]);
-assert.equal(mixed.r.horses[3].reserve,0,'idle must not earn reserve');assert(mixed.r.horses[4].reserve>90,'unused reserve must not automatically accelerate');
-assert(mixed.r.horses[5].finish>mixed.r.horses[0].finish+3,'launching too late must have a cost');
-assert(mixed.r.horses[1].finish<mixed.r.horses[7].finish,'a managed front-runner can beat excessive waiting');
-assert.deepEqual(run([closer(),front]).r,run([closer(),front]).r,'same inputs must reproduce the same result');
-const equal=run(Array.from({length:8},()=>closer())).r;assert(equal.horses.every(h=>h.finish===equal.horses[0].finish),'all eight slots, including bride, must have equal stats');
-const swapped=run([front,closer()]).r;assert.equal(swapped.horses[1].finish,mixed.r.horses[0].finish);assert.equal(swapped.horses[0].finish,mixed.r.horses[1].finish);
-resetRace(mixed.r);assert(mixed.r.horses.every(h=>h.reserve===0&&!h.spurt&&h.stamina===100));
-console.log('PASS: 1800m; visible final-straight comeback; finite late reserve; no idle bonus; too-late launch penalty; front-runner still viable; slot equality; deterministic replay; reset.');
-console.log('Balanced closer:',equal.horses[0].finish.toFixed(2)+'s','Managed front:',swapped.horses[0].finish.toFixed(2)+'s','Pass at:',Math.round(mixed.crossing)+'m');
+assert.equal(CONFIG.distance,1400);assert.equal(CONFIG.homeStraight,500);
+const styleList=Array.from({length:8},(_,i)=>makeHorse(i).style);
+assert.deepEqual(styleList,['front','front','closer','closer','closer','closer','closer','closer']);
+const plans=[saveAndLaunch(48),paceFront,saveAndLaunch(),(h,t)=>tap(h,t,3),()=>{},hold,saveAndLaunch(35,85),saveAndLaunch()].map((policy,slot)=>({slot,policy}));
+const mixed=run(plans),h=mixed.r.horses;
+assert(mixed.checkpoints[0][25].time<mixed.checkpoints[2][25].time,'same early inputs: front-runner must lead');
+assert(mixed.checkpoints[2][FINAL_START].time>mixed.checkpoints[0][FINAL_START].time,'closer enters the straight behind');
+assert(h[2].finish+.25<h[0].finish,'well-timed closer beats a strong front-runner');
+assert.equal(mixed.r.finishOrder[0],2);assert(mixed.crossing>900&&mixed.crossing<1400,'visible final-straight comeback');
+assert(mixed.spurts[2]);assert.equal(h[4].reserve,0);assert(!mixed.spurts[4]&&!mixed.spurts[5]);assert(h[5].reserve>90);
+assert(h[6].finish>h[2].finish+3,'late launch costs time');assert(h[0].finish<h[6].finish,'front-runner can beat poorly timed closer');
+assert.deepEqual(run(plans).r,mixed.r,'same inputs reproduce result');
+assert.equal(h[2].finish,h[7].finish,'bride gets the same closer stats');
+const equal=run(Array.from({length:8},(_,slot)=>({slot,policy:saveAndLaunch()}))).r.horses;
+assert.equal(equal[0].finish,equal[1].finish);assert(equal.slice(2).every(x=>x.finish===equal[2].finish),'equal stats within each style');
+assert(equal[2].finish<equal[0].finish,'identical save/launch favors closer');
+for(const slot of [0,1,2,3,4,5,6,7]){
+ const alone=run([{slot,policy:saveAndLaunch()}]).r.horses[0];
+ assert.equal(alone.finish,equal[slot].finish,'no rank-dependent boost or rubber-banding');
+}
+const gridBest=slot=>{
+ let best=Infinity;
+ for(let save=0;save<=60;save+=2)for(let launch=55;launch<=85;launch+=2){
+  const time=run([{slot,policy:saveAndLaunch(save,launch)}],{validate:false}).r.horses[0].finish;
+  best=Math.min(best,time);
+ }
+ return best;
+};
+const bestFront=gridBest(0),bestCloser=gridBest(2);assert(bestCloser+.5<bestFront,'timing sweep should favor closers, not one cherry-picked input');
+const practice=run(plans,{practice:true}).r;assert.deepEqual(run(plans,{practice:true}).r,practice);assert.equal(practice.finishOrder.length,8);
+resetRace(mixed.r);assert(mixed.r.horses.every(x=>x.reserve===0&&!x.spurt&&x.stamina===100));assert.deepEqual(mixed.r.horses.map(x=>x.style),styleList);
+console.log('PASS: 1400m; 1–2 front / 3–8 closer; early front lead and late reversal; finite reserve; late-launch penalty; front can win; within-style fairness; no rank boost; deterministic practice/replay; reset.');
+console.log('Best timing sweep: front '+bestFront.toFixed(2)+'s / closer '+bestCloser.toFixed(2)+'s. Mixed-race pass at '+Math.round(mixed.crossing)+'m.');

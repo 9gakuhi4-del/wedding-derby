@@ -5,13 +5,13 @@ const {Server}=require('socket.io');
 const {makeHorse,resetRace,stepRace}=require('./race-engine');
 const CONFIG=require('./race-config.cjs');
 const app=express(),server=http.createServer(app),io=new Server(server,{transports:['websocket','polling'],maxHttpBufferSize:16384});
-const rooms=new Map(),PORT=process.env.PORT||10000,VERSION='closing-1800-1';
+const rooms=new Map(),PORT=process.env.PORT||10000,VERSION='styles-1400-1';
 app.use(express.static(require('path').join(__dirname,'public'),{setHeaders(res,p){if(p.endsWith('.html')||p.endsWith('.js')||p.endsWith('.css'))res.setHeader('Cache-Control','no-cache')}}));
 app.get('/health',(_,res)=>res.json({ok:true,version:VERSION,rooms:rooms.size}));
 function roomCode(){let c;do{c=crypto.randomBytes(3).toString('hex').slice(0,5).toUpperCase()}while(rooms.has(c));return c}
 const token=()=>crypto.randomBytes(24).toString('hex');
 const name=(n,f)=>String(n||'').trim().slice(0,14)||f;
-function state(r){return{code:r.code,round:r.round,count:8,distance:CONFIG.distance,homeStraight:CONFIG.homeStraight,status:r.status,startAt:r.startAt,elapsed:r.elapsed,tick:r.tick,serverNow:Date.now(),practice:r.practice,finishOrder:[...r.finishOrder],hostConnected:!!r.hostId,horses:r.horses.map(h=>({slot:h.slot,name:h.name,female:h.female,bride:h.bride,connected:!!h.socketId,claimed:!!h.token,ready:h.ready,active:h.active,progress:h.progress,stamina:h.stamina,reserve:h.reserve,spurt:h.spurt,speed:h.speed,effort:h.effort,acceptedTaps:h.acceptedTaps,lastInputTick:h.lastInputTick,finish:h.finish,conserve:h.conserve}))}}
+function state(r){return{code:r.code,round:r.round,count:8,distance:CONFIG.distance,homeStraight:CONFIG.homeStraight,status:r.status,startAt:r.startAt,elapsed:r.elapsed,tick:r.tick,serverNow:Date.now(),practice:r.practice,finishOrder:[...r.finishOrder],hostConnected:!!r.hostId,horses:r.horses.map(h=>({slot:h.slot,style:h.style,name:h.name,female:h.female,bride:h.bride,connected:!!h.socketId,claimed:!!h.token,ready:h.ready,active:h.active,progress:h.progress,stamina:h.stamina,reserve:h.reserve,spurt:h.spurt,speed:h.speed,effort:h.effort,acceptedTaps:h.acceptedTaps,lastInputTick:h.lastInputTick,finish:h.finish,conserve:h.conserve}))}}
 function emit(r){io.to(r.code).emit('state',state(r));r.updatedAt=Date.now()}
 function leave(socket){const d=socket.data||{},r=rooms.get(d.room);if(!r)return;socket.leave(r.code);if(d.role==='host'&&r.hostId===socket.id)r.hostId=null;if(d.role==='player'){const h=r.horses[d.slot];if(h?.socketId===socket.id)h.socketId=null}socket.data={};emit(r)}
 function host(socket){const r=rooms.get(socket.data?.room);return r&&socket.data.role==='host'&&r.hostId===socket.id?r:null}

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {coursePose,COURSE_LENGTH,HOME_STRAIGHT,BEND_LENGTH,STRAIGHT_LENGTH,COURSE_SCALE,BEND_RADIUS,TRACK_HALF_WIDTH} from './src/course.mjs';
 
+assert.equal(COURSE_LENGTH,1400);assert.equal(HOME_STRAIGHT,500);assert.equal(2*BEND_LENGTH+2*STRAIGHT_LENGTH,COURSE_LENGTH);
 const near=(a,b,eps=1e-7)=>assert.ok(Math.abs(a-b)<eps,`${a} != ${b}`);
 for(const lane of [-15,-9.1,0,9.1,15]){
   const start=coursePose(0,lane),finish=coursePose(COURSE_LENGTH,lane);
@@ -26,4 +27,4 @@ near(length,COURSE_LENGTH,.11);near(Math.abs(turn),2*Math.PI,1e-6);
 // Progress is sampled without modulo at the finish; a completed horse never teleports forward.
 near(coursePose(COURSE_LENGTH+1).z,coursePose(COURSE_LENGTH).z);
 near(coursePose(-1).z,coursePose(0).z);
-console.log('PASS: closed 1800m lap, continuous corners, full turn, lane width, horse headings, final 600m straight.');
+console.log('PASS: closed 1400m lap, continuous corners, full turn, lane width, horse headings, final 500m straight.');
