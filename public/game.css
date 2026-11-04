@@ -9,7 +9,7 @@
 @media(max-width:600px){.stage #courseMap{top:19%;width:114px;height:57px}}
 
 /* Race-day presentation */
-.howTo{display:flex;align-items:center;gap:16px;padding:12px 16px;margin:0 0 12px;border:1px solid #ffffff20;border-radius:9px;background:#142d22;color:#c9d8cc;font-size:11px;flex-wrap:wrap}.howTo b{color:var(--gold);margin-right:5px}.howTo small{margin-left:auto;color:var(--muted)}.howTo.inRace{display:none}
+.howTo{display:flex;align-items:center;gap:16px;padding:12px 16px;margin:0 0 12px;border:1px solid #ffffff20;border-radius:9px;background:#142d22;color:#c9d8cc;font-size:11px;flex-wrap:wrap}.howTo b{color:var(--gold);margin-right:5px}.howTo small{margin-left:auto;color:var(--muted)}
 .cameraBar{flex-wrap:wrap;justify-content:flex-end;max-width:62%}.raceProgress{position:absolute;bottom:13%;left:2%;right:2%;display:flex;align-items:center;gap:10px;font-size:8px;letter-spacing:.13em;color:#f0e3c7;text-shadow:0 1px 3px #000}.raceProgress>div{height:3px;flex:1;background:#fff4;border-radius:3px;overflow:hidden}.raceProgress i{display:block;height:100%;width:0;background:#f1d397;transition:width .1s linear}
 .raceMoment{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;text-align:center;width:max-content;max-width:88%;padding:16px 34px;border-top:1px solid #e6c48299;border-bottom:1px solid #e6c48299;background:linear-gradient(90deg,#0b251800,#0b2518e0 15%,#0b2518e0 85%,#0b251800);text-shadow:0 2px 12px #0007;animation:momentIn .22s ease-out}.raceMoment small{font-size:10px;color:var(--gold);letter-spacing:.24em}.raceMoment strong{font-size:clamp(22px,3.8vw,54px);line-height:1.4;color:#fff2d6;max-width:100%;overflow-wrap:anywhere}.raceMoment>span{font-size:12px;color:#e6eadf}
 @keyframes momentIn{from{opacity:0;transform:translate(-50%,-45%)}to{opacity:1;transform:translate(-50%,-50%)}}
@@ -32,3 +32,38 @@
 @media(max-width:700px){.stageHostControls{width:170px}.stageHostControls .fanfareButton{font-size:12px}}
 .reserveRow{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:10px;margin:8px 0 4px;color:var(--muted)}.reserveRow b{color:var(--gold);font-weight:600}.reserveRow b span{margin-left:4px;font-variant-numeric:tabular-nums}.reserveMeter{height:5px;border-radius:5px;background:#0005;overflow:hidden}.reserveMeter i{display:block;width:0;height:100%;background:#c9ad6e;transition:width .08s linear}.controller.spurting .reserveRow{color:#f8dfa8}.controller.spurting .reserveMeter i{background:#ffe3a2;box-shadow:0 0 8px #e6c48266}@media(prefers-reduced-motion:reduce){.reserveMeter i{transition:none}}
 .styleTag{display:inline-block;font-size:9px;font-weight:700;font-style:normal;line-height:1.5;white-space:nowrap;padding:1px 6px;border:1px solid #ffffff25;border-radius:4px;letter-spacing:.03em}.styleTag.front{color:#add7ee;background:#173442}.styleTag.closer{color:#f0d495;background:#3a3320}.slot>.styleTag{margin-top:7px}.styleGuide{color:var(--gold);font-size:11px;line-height:1.6}.rankStyle{color:#e6c482;margin-right:4px}.rosterRow>.styleTag{flex-shrink:0}.yourHorse div>#yourStyle{font-size:9px;letter-spacing:.03em;margin-bottom:3px}
+
+/* The canvas drawing buffer must never determine the layout height. */
+.stage>#track{position:absolute;inset:0;width:100%;height:100%;max-width:100%;max-height:100%}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+@media(max-width:900px){
+ /* 16px fields prevent automatic focus zoom on mobile browsers. Pinch zoom stays available. */
+ input,select,textarea,.rosterRow input{font-size:16px}
+ body.playing{touch-action:manipulation}
+ body.playing main{padding-bottom:370px;padding-bottom:calc(370px + env(safe-area-inset-bottom,0px))}
+ body.playing .stage{height:240px;height:clamp(180px,32svh,300px);min-height:0;max-height:300px;aspect-ratio:auto}
+ body.playing #controller{position:fixed;left:8px;right:8px;bottom:0;z-index:6;margin:0;max-width:none;max-height:calc(100svh - 12px);overflow-y:auto;overscroll-behavior:contain;background:#10271f;box-shadow:0 -8px 24px #0006;border-radius:12px 12px 0 0;padding:10px 10px calc(10px + env(safe-area-inset-bottom,0px));gap:8px 12px;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);grid-template-areas:"horse stamina" "ready ready" "controls controls" "meta meta"}
+ body.playing .yourHorse{grid-area:horse;min-width:0;display:grid;grid-template-columns:36px minmax(0,1fr);gap:6px}
+ body.playing .yourHorse>div{min-width:0}
+ body.playing .yourHorse div>b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ body.playing .yourHorse>.number{width:36px;height:40px;font-size:24px}
+ body.playing .yourHorse>strong{grid-column:1/-1;margin-left:0;font-size:24px;line-height:1.1}
+ body.playing .staminaArea{grid-area:stamina;min-width:0}
+ body.playing .staminaArea>div:first-child{margin-bottom:4px}
+ body.playing .staminaArea p{height:30px;overflow:hidden;line-height:15px;margin-top:5px}
+ body.playing .paceRow,body.playing .reserveRow{margin-top:5px}
+ body.playing .controls{grid-area:controls;grid-template-columns:1fr 1fr;gap:10px}
+ body.playing .controls button{height:76px;min-height:76px;padding:10px;font-size:25px}
+ body.playing .controls small{font-size:11px}
+ body.playing .inputMeta{grid-area:meta;height:15px;line-height:15px;margin-top:0;white-space:nowrap}
+ body.playing #readyBtn{grid-area:ready;padding:7px 10px;min-height:36px}
+ body.playing #fullscreenBtn{display:none}
+ body.playing .howTo span:not(.styleGuide),body.playing .howTo small{display:none}
+ body.playing .howTo{padding:8px 10px;min-height:34px}
+}
+@media(max-width:900px) and (max-height:500px){
+ body.playing .stage{height:180px}
+ body.playing #controller{grid-template-columns:minmax(0,.8fr) minmax(0,1fr) minmax(0,1.2fr);grid-template-areas:"horse stamina ready" "horse stamina controls" "meta meta meta";gap:6px 10px;padding-top:8px}
+ body.playing .controls button{height:64px;min-height:64px;font-size:22px}
+ body.playing .staminaArea p{display:none}
+}

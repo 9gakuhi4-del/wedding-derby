@@ -56,7 +56,7 @@ const running={...lobby,status:'running',elapsed:2};
  Object.assign(h.context,{RaceAudio:h.context.window.RaceAudio,RacePresentation:class{update(){}},io:()=>socket,URLSearchParams,location:{search:'',origin:'http://localhost'},localStorage:{getItem:()=>null,setItem(){}},document:{getElementById:get,body:{classList:{toggle(){}},appendChild(){}},addEventListener(){},activeElement:null},requestAnimationFrame(){}});
  h.context.window.addEventListener=(e,fn)=>handlers[e]=fn;
  h.context.window.RACE_COLORS=['#2774d8','#df7fb5','#d43f3e','#e9cf59','#8462b4','#29977c','#e99b3b','#f4f0e6'];h.context.window.RACE_INK=['#fff','#201d27','#fff','#23271b','#fff','#fff','#221c13','#28251d'];
- const expose="window.test={audio,set(o){if(o.slot!==undefined)mySlot=o.slot;if(o.mode!==undefined)mode=o.mode;if(o.room!==undefined)room=o.room;if(o.ready!==undefined)assetsReady=o.ready;if(o.replay!==undefined)replay=o.replay;},render,renderSlots,renderHostControls,toggleFanfare,startRace};";
+ const expose="window.test={audio,set(o){if(o.code!==undefined)code=o.code;if(o.slot!==undefined)mySlot=o.slot;if(o.mode!==undefined)mode=o.mode;if(o.room!==undefined)room=o.room;if(o.ready!==undefined)assetsReady=o.ready;if(o.replay!==undefined)replay=o.replay;},accept,render,renderSlots,renderHostControls,toggleFanfare,startRace};";
  vm.runInContext(gameCode.replace(/\}\)\(\);\s*$/,expose+'})();'),h.context);
  const t=h.context.window.test,room={...lobby,horses:Array.from({length:8},(_,slot)=>({slot,connected:true,ready:true,active:true,name:'Test',progress:0})),practice:false};
  t.set({mode:'host',room,ready:true});t.renderHostControls();assert.equal(get('startBtn').disabled,false);assert.equal(get('stageStartBtn').disabled,false);assert.equal(get('stageFanfareBtn').disabled,false);
@@ -81,5 +81,34 @@ const running={...lobby,status:'running',elapsed:2};
  t.set({slot:0});t.render();assert.equal(get('yourStyle').textContent,'先行型');t.set({slot:1});t.render();assert.equal(get('yourStyle').textContent,'先行型');t.set({slot:2});t.render();assert.equal(get('yourStyle').textContent,'差し型');assert.match(get('ranking').innerHTML,/先行/);assert.match(get('ranking').innerHTML,/差し/);
  t.set({mode:'join',room,slot:null});t.renderSlots();assert.equal((get('slotGrid').innerHTML.match(/styleTag front/g)||[]).length,2);assert.equal((get('slotGrid').innerHTML.match(/styleTag closer/g)||[]).length,6);
  t.set({mode:'host'});t.render();assert.equal((get('roster').innerHTML.match(/styleTag front/g)||[]).length,2);assert.equal((get('roster').innerHTML.match(/styleTag closer/g)||[]).length,6);
- console.log('PASS: 1400m roles, player HUD and reserve; silent preload; one-shot cue; no duplicate audio; cancellation during load/play; mute; natural end; BGM/replay transition; download/autoplay failures; host/practice roles; fullscreen containment; start lock; disconnect; unchanged manual start.');
+ // Start transitions must not request fullscreen, focus, scroll or modify the viewport.
+ let fullscreenCalls=0;get('stage').requestFullscreen=async()=>{fullscreenCalls++};
+ h.context.window.matchMedia=()=>({matches:true});
+ t.set({mode:'player',slot:7,code:room.code,room});
+ for(const status of ['lobby','countdown','running','running','finished'])t.accept({...playerRoom,status,serverNow:Date.now(),tick:status==='running'?20:0});
+ assert.equal(fullscreenCalls,0,'race state must not request fullscreen');
+ h.context.navigator={vibrate(){}};t.set({room:playerRoom,replay:null});get('tapBtn').onpointerdown({preventDefault(){}});get('conserveBtn').onpointerdown({preventDefault(){}});assert(calls.includes('tapBatch')&&calls.includes('conserve'),'both controls still send real input events');
+ await get('fullscreenBtn').onclick();assert.equal(fullscreenCalls,0,'mobile player cannot hide controls in stage-only fullscreen');
+ t.set({mode:'practice'});await get('fullscreenBtn').onclick();assert.equal(fullscreenCalls,0);
+ t.set({mode:'host'});await get('fullscreenBtn').onclick();assert.equal(fullscreenCalls,1,'host explicit fullscreen retained');
+ h.context.window.matchMedia=()=>({matches:false});t.set({mode:'player'});await get('fullscreenBtn').onclick();assert.equal(fullscreenCalls,2,'desktop explicit fullscreen retained');
+ // Run the shipped presentation too, not only the controller with a presentation stub.
+ for(const el of elements.values()){el.addEventListener=()=>{};el.replaceChildren=()=>{};}
+ h.context.matchMedia=()=>({matches:false});h.context.TextDecoder=TextDecoder;
+ vm.runInContext(fs.readFileSync('public/renderer3d.js','utf8'),h.context);
+ const presentation=new h.context.window.RacePresentation();
+ for(const status of ['lobby','countdown','running']){
+  presentation.update({...playerRoom,status},7,'player',false,false);
+  assert(!get('howTo').classList.contains('hidden'));assert(!get('howTo').classList.contains('inRace'),'no automatic start reflow');
+ }
+ get('howTo').classList.add('hidden');presentation.update(playerRoom,7,'player',false,false);assert(get('howTo').classList.contains('hidden'),'manual help choice preserved');
+ const css=fs.readFileSync('public/game.css','utf8');
+ assert.match(css,/\.stage>#track\{position:absolute;inset:0;/);
+ assert.match(css,/body\.playing #controller\{position:fixed;left:8px;right:8px;bottom:0;/);
+ assert.match(css,/grid-template-areas:"horse stamina" "ready ready" "controls controls" "meta meta"/);
+ assert.match(css,/input,select,textarea,\.rosterRow input\{font-size:16px\}/);
+ assert(!/user-scalable\s*=\s*no|maximum-scale\s*=\s*1/.test(html),'user pinch zoom remains accessible');
+ assert(!/\.howTo\.inRace\{display:none\}/.test(css));
+ assert(!/scrollIntoView\(|scrollTo\(|\.focus\(/.test(gameCode),'no unsolicited viewport navigation');
+ console.log('PASS: stable mobile inputs, guarded fullscreen, unchanged manual host fullscreen, no automatic start reflow; 1400m roles, player HUD and reserve; silent preload; one-shot cue; no duplicate audio; cancellation during load/play; mute; natural end; BGM/replay transition; download/autoplay failures; host/practice roles; fullscreen containment; start lock; disconnect; unchanged manual start.');
 })().catch(e=>{console.error(e);process.exitCode=1});

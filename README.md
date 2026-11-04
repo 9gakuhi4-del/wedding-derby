@@ -26,6 +26,10 @@ Horse-number badges keep stable collision placements, ease movement between posi
 
 Final positions remain server-authoritative. Run-out animation and ceremony effects never change the winner. There is no finish-order override.
 
+## Stable mobile controls
+
+On player/practice screens up to 900px wide, the controller is anchored to the viewport bottom (including the safe area) and the two input buttons remain reachable. The ready row sits above those buttons, so countdown does not push them down. The renderer canvas is absolutely positioned inside a size-constrained stage; changes to its high-DPI drawing buffer cannot enlarge the page. Instructions are no longer auto-hidden at race start. Mobile fields use 16px text to prevent focus zoom; repeated game inputs do not trigger double-tap zoom. User-controlled pinch zoom remains available. Stage-only fullscreen is hidden and guarded on mobile player/practice screens; the host's explicit fullscreen button remains unchanged. Race distance, style balance and authoritative input logic are unchanged.
+
 ## Manual fanfare
 
 The host's **♪ ファンファーレ** button (also inside **全画面**) plays the supplied 21.6-second cue on that device only. A practice-mode button allows a sound check. Audio is prefetched for the host/practice screen, never auto-played, and is not downloaded by riders just for joining. The same button cancels loading or stops playback; repeated clicks cannot layer sounds. **発走** remains separate and is disabled during loading/playback. Ending the cue never starts a race. Muting, disconnecting, leaving the page or entering a race cancels the cue, including a late asynchronous load. A failed load leaves racing available and can be retried. Run `node check-fanfare.cjs` for the audio and control regression checks.
