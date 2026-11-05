@@ -13,7 +13,7 @@ function practiceInput(h,tick){
   else{h.conserve=false;if(tick%4===0)h.tapQueue=1;}
   return;
  }
- const chargeAt=[0,0,39,34,44,37,31][h.slot],launchAt=FINAL_START+[0,0,2,-1,4,1,0][h.slot];
+ const chargeAt=[0,0,39,34,44,37,31,0,41][h.slot],launchAt=FINAL_START+[0,0,2,-1,4,1,0,0,3][h.slot];
  if(h.progress>=chargeAt&&h.progress<launchAt){h.conserve=true;h.tapQueue=0;h.effort=0;}
  else{h.conserve=false;if(tick%4===0)h.tapQueue=1;}
 }

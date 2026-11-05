@@ -4,8 +4,9 @@ import CONFIG from '../race-config.cjs';
 import {coursePose,courseSection,COURSE_LENGTH,HOME_STRAIGHT,BEND_LENGTH,STRAIGHT_LENGTH,BEND_RADIUS,TRACK_HALF_WIDTH,METRES_PER_PERCENT,COURSE_SCALE} from './course.mjs';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {clone as cloneSkeleton} from 'three/addons/utils/SkeletonUtils.js';
-const COLORS=['#2774d8','#df7fb5','#d43f3e','#e9cf59','#8462b4','#29977c','#e99b3b','#f4f0e6'];
-const INK=['#fff','#201d27','#fff','#23271b','#fff','#fff','#221c13','#28251d'];
+const COLORS=CONFIG.colors,FIELD=CONFIG.horseCount,LANE_WIDTH=2.6;
+const laneOffset=slot=>(slot-(FIELD-1)/2)*LANE_WIDTH;
+const INK=CONFIG.ink;
 const V=(x=0,y=0,z=0)=>new THREE.Vector3(x,y,z);
 const mat=(color,roughness=.65)=>new THREE.MeshStandardMaterial({color,roughness,metalness:0});
 function mesh(parent,g,m,x=0,y=0,z=0,sx=1,sy=1,sz=1){const o=new THREE.Mesh(g,m);o.position.set(x,y,z);o.scale.set(sx,sy,sz);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o;}
@@ -49,10 +50,14 @@ class RaceRenderer{
  this.onContextLost=e=>{e.preventDefault();document.getElementById('loadingDetail').textContent='3D描画が停止しました。再読み込みしてください。';document.getElementById('loading').classList.remove('hidden');document.getElementById('retryAssets').classList.remove('hidden');};canvas.addEventListener('webglcontextlost',this.onContextLost);
  }
  async init(onProgress=()=>{}){onProgress('馬の3Dモデルを読み込み中');const gltf=await new GLTFLoader().loadAsync('/assets/3d/racehorse.glb');
+ this.buildField(gltf);
+ onProgress('3D競馬場の準備完了');this.webgl.compile(this.scene,this.cam);
+ }
+ buildField(gltf){
  this.assetInfo={animations:gltf.animations.map(a=>a.name)};
- for(let i=0;i<8;i++){
+ for(let i=0;i<FIELD;i++){
   const root=new THREE.Group(),model=cloneSkeleton(gltf.scene);root.add(model);this.scene.add(root);
-  model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const mm=Array.isArray(o.material)?o.material:[o.material];o.material=mm.map(m=>{m=m.clone();if(/coat|body|horse/i.test(m.name)){m.color.multiply(new THREE.Color(['#a18773','#bc8a60','#59514c','#d18b55','#807063','#a78b6c','#d7d4ce','#b28d6c'][i]));}m.roughness=.65;return m});if(o.material.length===1)o.material=o.material[0]}});
+  model.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;const mm=Array.isArray(o.material)?o.material:[o.material];o.material=mm.map(m=>{m=m.clone();if(/coat|body|horse/i.test(m.name)){m.color.multiply(new THREE.Color(['#a18773','#bc8a60','#59514c','#d18b55','#807063','#a78b6c','#d7d4ce','#b28d6c','#916547'][i]));}m.roughness=.65;return m});if(o.material.length===1)o.material=o.material[0]}});
   const mixer=new THREE.AnimationMixer(model);const clip=gltf.animations.find(a=>/gallop/i.test(a.name))||gltf.animations[0];const action=clip?mixer.clipAction(clip).play():null;
   const rider=makeRider(i);rider.group.position.set(0,1.55,.05);root.add(rider.group);
   const saddle=mat('#201b18',.5),pad=mat(COLORS[i]);ell(root,saddle,0,1.51,.02,.34,.10,.48);mesh(root,box,pad,0,1.40,.03,.70,.07,.82);
@@ -63,7 +68,6 @@ class RaceRenderer{
   const labelLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(0,2.75,0),V(0,2.75,0)]),new THREE.LineBasicMaterial({color:'#fff9df',depthTest:false,depthWrite:false,transparent:true,opacity:.8,toneMapped:false,fog:false}));labelLine.renderOrder=999;labelLine.frustumCulled=false;root.add(labelLine);
   this.horses.push({root,model,mixer,action,rider,label,labelLine,phase:i*.19});
  }
- onProgress('3D競馬場の準備完了');this.webgl.compile(this.scene,this.cam);
  }
  buildWorld(){
  const grassTex=texCanvas(512,512,(c,w,h)=>{c.fillStyle='#587740';c.fillRect(0,0,w,h);const random=seeded(199);for(let i=0;i<65000;i++){const v=30+random()*55;c.fillStyle=`rgba(${v+25},${v+60},${v},${.12+random()*.2})`;c.fillRect(random()*w,random()*h,1+random()*2,2+random()*6)}});
@@ -79,7 +83,7 @@ class RaceRenderer{
  for(const lane of [-15,15])for(const height of [.65,1.15]){const points=[];for(let i=0;i<300;i++){const p=coursePose(i/300*COURSE_LENGTH,lane);points.push(V(p.x,height,p.z))}mesh(this.scene,new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points,true),600,.055,6,true),railMat)}
  for(const d of [...new Set([...Array.from({length:COURSE_LENGTH/200},(_,i)=>(i+1)*200),COURSE_LENGTH-HOME_STRAIGHT])].sort((a,b)=>a-b))for(const side of [-1,1]){const p=coursePose(d,side*16.5),t=texCanvas(256,128,c=>{c.fillStyle=d===COURSE_LENGTH?'#153f30':'#fcf7e9';c.fillRect(0,0,256,128);c.fillStyle=d===COURSE_LENGTH?'#f7d991':'#164c37';c.font='bold 72px sans-serif';c.textAlign='center';c.fillText(d===COURSE_LENGTH?'GOAL':COURSE_LENGTH-d,128,89)});const sign=mesh(this.scene,new THREE.PlaneGeometry(2.4,1.2),new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide}),p.x,2,p.z);sign.rotation.y=p.yaw-side*Math.PI/4;segment(this.scene,V(p.x,0,p.z),V(p.x,1.6,p.z),.07,.07,railMat)}
  const finishPose=coursePose(COURSE_LENGTH),finish=mesh(this.scene,new THREE.PlaneGeometry(30,.35),new THREE.MeshBasicMaterial({color:'#fffbea'}),finishPose.x,.012,finishPose.z);finish.rotation.set(-Math.PI/2,0,0);
- const gateMat=mat('#205c4b');this.gates=new THREE.Group();this.gates.position.set(finishPose.x,0,finishPose.z);this.scene.add(this.gates);for(let i=0;i<9;i++)mesh(this.gates,box,gateMat,(i-4)*2.6,1.5,3,.12,3,2.8);mesh(this.gates,box,gateMat,0,3.1,3,21.1,.32,3);this.gateDoors=[];for(let i=0;i<8;i++)for(const side of [-1,1]){const hinge=new THREE.Group();hinge.position.set((i-3.5)*2.6+side*1.24,1.1,-1.75);this.gates.add(hinge);mesh(hinge,box,gateMat,-side*.6,0,0,1.2,1.4,.06);for(const y of [-.4,0,.4])mesh(hinge,box,mat('#d7dccb'),-side*.6,y,-.04,1.18,.06,.03);this.gateDoors.push({hinge,side})}
+ const gateMat=mat('#205c4b');this.gates=new THREE.Group();this.gates.position.set(finishPose.x,0,finishPose.z);this.scene.add(this.gates);for(let i=0;i<=FIELD;i++)mesh(this.gates,box,gateMat,(i-FIELD/2)*LANE_WIDTH,1.5,3,.12,3,2.8);mesh(this.gates,box,gateMat,0,3.1,3,FIELD*LANE_WIDTH+.3,.32,3);this.gateDoors=[];for(let i=0;i<FIELD;i++)for(const side of [-1,1]){const hinge=new THREE.Group();hinge.position.set(laneOffset(i)+side*1.24,1.1,-1.75);this.gates.add(hinge);mesh(hinge,box,gateMat,-side*.6,0,0,1.2,1.4,.06);for(const y of [-.4,0,.4])mesh(hinge,box,mat('#d7dccb'),-side*.6,y,-.04,1.18,.06,.03);this.gateDoors.push({hinge,side})}
  const goal=new THREE.Group();goal.position.set(finishPose.x,0,finishPose.z);this.scene.add(goal);const gold=mat('#c8ae70',.4);for(const side of [-1,1]){mesh(goal,box,gateMat,side*16,3,0,.32,6,.32);mesh(goal,box,gold,side*16,6,0,.8,.2,.8)}mesh(goal,box,gateMat,0,6.4,0,32.5,1.1,.35);const goalTex=texCanvas(1024,96,(c,w,h)=>{c.fillStyle='#174633';c.fillRect(0,0,w,h);c.fillStyle='#f1d59b';c.font='bold 55px sans-serif';c.textAlign='center';c.fillText('WEDDING DERBY  /  FINISH',w/2,67)});mesh(goal,new THREE.PlaneGeometry(30,1),new THREE.MeshBasicMaterial({map:goalTex,side:THREE.DoubleSide}),0,6.4,.19);
  const treeMat=mat('#324f31',1),trunkMat=mat('#584535',1),treeCount=130,rand=seeded(51);
  const trees=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,2),treeMat,treeCount*2),trunks=new THREE.InstancedMesh(new THREE.CylinderGeometry(.20,.32,3.8,6),trunkMat,treeCount);
@@ -128,7 +132,7 @@ class RaceRenderer{
  const c=this.mapCtx;if(!c)return;c.clearRect(0,0,360,180);c.fillStyle='#0a2119d9';c.fillRect(0,0,360,180);c.font='20px sans-serif';c.fillStyle='#e6c482';c.fillText(`芝 ${COURSE_LENGTH.toLocaleString()}m · 1周`,23,32);
  const point=p=>[180+p.z*.58/COURSE_SCALE,109+p.x*.58/COURSE_SCALE];c.beginPath();for(let i=0;i<=240;i++){const [x,y]=point(coursePose(i/240*COURSE_LENGTH));i?c.lineTo(x,y):c.moveTo(x,y)}c.strokeStyle='#c4d3b65c';c.lineWidth=12;c.stroke();
  const [gx,gy]=point(coursePose(COURSE_LENGTH));c.strokeStyle='#f9dfab';c.lineWidth=2;c.beginPath();c.moveTo(gx,gy-11);c.lineTo(gx,gy+11);c.stroke();
- for(const h of this.state.horses){if(!h.active&&this.state.status!=='lobby')continue;const [x,y]=point(coursePose((this.visual[h.slot]||0)*METRES_PER_PERCENT,(h.slot-3.5)*2.6));c.beginPath();c.arc(x,y,h.slot===this.selected?6:4,0,Math.PI*2);c.fillStyle=COLORS[h.slot];c.fill();if(h.slot===this.selected){c.strokeStyle='#fff';c.lineWidth=2;c.stroke()}}
+ for(const h of this.state.horses){if(!h.active&&this.state.status!=='lobby')continue;const [x,y]=point(coursePose((this.visual[h.slot]||0)*METRES_PER_PERCENT,laneOffset(h.slot)));c.beginPath();c.arc(x,y,h.slot===this.selected?6:4,0,Math.PI*2);c.fillStyle=COLORS[h.slot];c.fill();if(h.slot===this.selected){c.strokeStyle='#fff';c.lineWidth=2;c.stroke()}}
  }
 
  updateLabels(w,h,dt=.016,reset=false){
@@ -172,7 +176,7 @@ class RaceRenderer{
  setCamera(c){if(c!==this.camera)this.labelReset=true;this.camera=c;this.snap=!this.previous}
  render(dt=.016){if(this.disposed)return;const w=this.canvas.clientWidth,h=this.canvas.clientHeight;if(!w||!h)return;if(this.width!==w||this.height!==h){this.width=w;this.height=h;this.labelReset=true;this.webgl.setSize(w,h,false);this.cam.aspect=w/h;this.cam.updateProjectionMatrix()}
  dt=Math.min(.07,dt);this.time+=dt;const s=this.state;if(!s||!this.horses.length)return;const running=s.status==='running';let lead=0,tail=100;
- for(const horse of s.horses){const i=horse.slot;if(this.visual[i]==null||s.status==='lobby')this.visual[i]=horse.progress;const finishAge=horse.finish==null?0:Math.max(0,s.elapsed+(this.time-this.stateAt)*(this.playbackRate||1)-horse.finish),coast=horse.finish==null?0:horse.speed*.6*(1-Math.exp(-finishAge/.6));this.visual[i]+=(horse.progress+coast-this.visual[i])*(1-Math.exp(-dt*14));if(horse.active){lead=Math.max(lead,Math.min(100,this.visual[i]));tail=Math.min(tail,Math.min(100,this.visual[i]))}const a=this.horses[i];a.root.visible=horse.active||s.status==='lobby';const travel=this.visual[i]*METRES_PER_PERCENT;const pose=coursePose(travel>COURSE_LENGTH?travel-COURSE_LENGTH:travel,(i-3.5)*2.6);a.pose=pose;a.root.position.set(pose.x,0,pose.z);a.root.rotation.y=pose.yaw;if(a.contact){a.contact.visible=this.naturalLook&&a.root.visible;a.contact.position.set(pose.x,.018,pose.z);a.contact.rotation.set(-Math.PI/2,0,-pose.yaw)}
+ for(const horse of s.horses){const i=horse.slot;if(this.visual[i]==null||s.status==='lobby')this.visual[i]=horse.progress;const finishAge=horse.finish==null?0:Math.max(0,s.elapsed+(this.time-this.stateAt)*(this.playbackRate||1)-horse.finish),coast=horse.finish==null?0:horse.speed*.6*(1-Math.exp(-finishAge/.6));this.visual[i]+=(horse.progress+coast-this.visual[i])*(1-Math.exp(-dt*14));if(horse.active){lead=Math.max(lead,Math.min(100,this.visual[i]));tail=Math.min(tail,Math.min(100,this.visual[i]))}const a=this.horses[i];a.root.visible=horse.active||s.status==='lobby';const travel=this.visual[i]*METRES_PER_PERCENT;const pose=coursePose(travel>COURSE_LENGTH?travel-COURSE_LENGTH:travel,laneOffset(i));a.pose=pose;a.root.position.set(pose.x,0,pose.z);a.root.rotation.y=pose.yaw;if(a.contact){a.contact.visible=this.naturalLook&&a.root.visible;a.contact.position.set(pose.x,.018,pose.z);a.contact.rotation.set(-Math.PI/2,0,-pose.yaw)}
  const rollingSpeed=horse.finish==null?horse.speed:horse.speed*Math.exp(-finishAge/.6);const moving=horse.active&&((running&&horse.finish==null)||(horse.finish!=null&&(this.visual[i]<100||rollingSpeed>.16)));const hz=moving?(1.25+rollingSpeed*COURSE_SCALE*.36):0;a.root.rotation.z+=((moving&&pose.bend ? .025 : 0)-a.root.rotation.z)*(1-Math.exp(-dt*5));
  // Drive skeleton and rider with the same cadence, derived from authoritative speed.
  if(a.action){a.action.timeScale=hz;a.action.weight+=((moving?1:0)-a.action.weight)*(1-Math.exp(-dt*5));a.mixer.update(dt*(this.playbackRate||1))}a.phase+=dt*hz*(this.playbackRate||1);const phase=a.phase*Math.PI*2;

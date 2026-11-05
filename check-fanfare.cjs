@@ -55,10 +55,10 @@ const running={...lobby,status:'running',elapsed:2};
  const socket={connected:true,on:(e,fn)=>handlers[e]=fn,timeout(){return this},emit(e,data,cb){calls.push(e);cb?.(null,{ok:true})}};
  Object.assign(h.context,{RaceAudio:h.context.window.RaceAudio,RacePresentation:class{update(){}},io:()=>socket,URLSearchParams,location:{search:'',origin:'http://localhost'},localStorage:{getItem:()=>null,setItem(){}},document:{getElementById:get,body:{classList:{toggle(){}},appendChild(){}},addEventListener(){},activeElement:null},requestAnimationFrame(){}});
  h.context.window.addEventListener=(e,fn)=>handlers[e]=fn;
- h.context.window.RACE_COLORS=['#2774d8','#df7fb5','#d43f3e','#e9cf59','#8462b4','#29977c','#e99b3b','#f4f0e6'];h.context.window.RACE_INK=['#fff','#201d27','#fff','#23271b','#fff','#fff','#221c13','#28251d'];
+ h.context.window.RACE_COLORS=require('./race-config.cjs').colors;h.context.window.RACE_INK=require('./race-config.cjs').ink;
  const expose="window.test={audio,set(o){if(o.code!==undefined)code=o.code;if(o.slot!==undefined)mySlot=o.slot;if(o.mode!==undefined)mode=o.mode;if(o.room!==undefined)room=o.room;if(o.ready!==undefined)assetsReady=o.ready;if(o.replay!==undefined)replay=o.replay;},accept,render,renderSlots,renderHostControls,toggleFanfare,startRace};";
  vm.runInContext(gameCode.replace(/\}\)\(\);\s*$/,expose+'})();'),h.context);
- const t=h.context.window.test,room={...lobby,horses:Array.from({length:8},(_,slot)=>({slot,connected:true,ready:true,active:true,name:'Test',progress:0})),practice:false};
+ const t=h.context.window.test,room={...lobby,horses:Array.from({length:9},(_,slot)=>({slot,connected:true,ready:true,active:true,name:'Test',progress:0})),practice:false};
  t.set({mode:'host',room,ready:true});t.renderHostControls();assert.equal(get('startBtn').disabled,false);assert.equal(get('stageStartBtn').disabled,false);assert.equal(get('stageFanfareBtn').disabled,false);
  // UI gating is tested without invoking the heavyweight presentation render callback.
  t.audio.onFanfareChange=t.renderHostControls;t.toggleFanfare();assert.equal(get('startBtn').disabled,true);assert.equal(get('stageStartBtn').disabled,true);await flush();assert.equal(t.audio.fanfareState,'playing');
@@ -79,8 +79,8 @@ const running={...lobby,status:'running',elapsed:2};
  t.set({mode:'player',room:playerRoom,slot:7});t.render();assert.equal(get('reserveValue').textContent,'54%');assert.equal(get('reserveFill').style.width,'54%');assert.equal(get('reserveStatus').textContent,'発動中');assert(get('controller').classList.contains('spurting'));assert.equal(get('playerDistance').textContent,'980 / 1400m');assert.equal(get('distance').innerHTML,'420 <small>m</small>');assert.match(get('paceAdvice').textContent,/末脚発動/);assert.equal(get('yourStyle').textContent,'差し型');assert.match(get('broadcastText').textContent,/最後の直線/);
  playerRoom.horses[7].spurt=false;playerRoom.horses[7].reserve=0;t.render();assert.equal(get('reserveStatus').textContent,'末脚なし');assert(!get('controller').classList.contains('spurting'));
  t.set({slot:0});t.render();assert.equal(get('yourStyle').textContent,'先行型');t.set({slot:1});t.render();assert.equal(get('yourStyle').textContent,'先行型');t.set({slot:2});t.render();assert.equal(get('yourStyle').textContent,'差し型');assert.match(get('ranking').innerHTML,/先行/);assert.match(get('ranking').innerHTML,/差し/);
- t.set({mode:'join',room,slot:null});t.renderSlots();assert.equal((get('slotGrid').innerHTML.match(/styleTag front/g)||[]).length,2);assert.equal((get('slotGrid').innerHTML.match(/styleTag closer/g)||[]).length,6);
- t.set({mode:'host'});t.render();assert.equal((get('roster').innerHTML.match(/styleTag front/g)||[]).length,2);assert.equal((get('roster').innerHTML.match(/styleTag closer/g)||[]).length,6);
+ t.set({mode:'join',room,slot:null});t.renderSlots();assert.equal((get('slotGrid').innerHTML.match(/styleTag front/g)||[]).length,2);assert.equal((get('slotGrid').innerHTML.match(/styleTag closer/g)||[]).length,7);
+ t.set({mode:'host'});t.render();assert.equal((get('roster').innerHTML.match(/styleTag front/g)||[]).length,2);assert.equal((get('roster').innerHTML.match(/styleTag closer/g)||[]).length,7);
  // Start transitions must not request fullscreen, focus, scroll or modify the viewport.
  let fullscreenCalls=0;get('stage').requestFullscreen=async()=>{fullscreenCalls++};
  h.context.window.matchMedia=()=>({matches:true});
@@ -102,6 +102,7 @@ const running={...lobby,status:'running',elapsed:2};
   assert(!get('howTo').classList.contains('hidden'));assert(!get('howTo').classList.contains('inRace'),'no automatic start reflow');
  }
  get('howTo').classList.add('hidden');presentation.update(playerRoom,7,'player',false,false);assert(get('howTo').classList.contains('hidden'),'manual help choice preserved');
+ const finished={...playerRoom,status:'finished',round:1,finishOrder:[8,0,1,2,3,4,5,6,7],horses:playerRoom.horses.map((h,i)=>({...h,progress:100,finish:i===8?34:35+i}))};presentation.update(finished,8,'player',false,true);assert.equal(get('winnerNumber').textContent,'9番');assert.equal((get('resultList').innerHTML.match(/class="resultRow"/g)||[]).length,9);assert(!get('resultList').innerHTML.includes('undefined'));
  const css=fs.readFileSync('public/game.css','utf8');
  assert.match(css,/\.stage>#track\{position:absolute;inset:0;/);
  assert.match(css,/body\.playing #controller\{position:fixed;left:8px;right:8px;bottom:0;/);
