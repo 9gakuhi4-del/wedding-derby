@@ -5,18 +5,24 @@ const {Server}=require('socket.io');
 const {makeHorse,resetRace,stepRace}=require('./race-engine');
 const CONFIG=require('./race-config.cjs');
 const app=express(),server=http.createServer(app),io=new Server(server,{transports:['websocket','polling'],maxHttpBufferSize:16384});
-const rooms=new Map(),PORT=process.env.PORT||10000,VERSION='nine-horses-1';
+const rooms=new Map(),PORT=process.env.PORT||10000,VERSION='fixed-entry-1';
+const entry=require('./fixed-entry.cjs').createFixedEntry(rooms,require('./entry-config.cjs').adminHash);
+const entryQR=require('./entry-qr.cjs');
 app.use(express.static(require('path').join(__dirname,'public'),{setHeaders(res,p){if(p.endsWith('.html')||p.endsWith('.js')||p.endsWith('.css'))res.setHeader('Cache-Control','no-cache')}}));
 app.get('/health',(_,res)=>res.json({ok:true,version:VERSION,rooms:rooms.size}));
+app.get('/api/entry',(_,res)=>res.set('Cache-Control','no-store').json(entry.status()));
+app.get('/guest-qr.png',(_,res)=>res.set('Cache-Control','public, max-age=3600').type('png').send(entryQR.png));
+app.get('/guest-qr.svg',(_,res)=>res.set('Cache-Control','public, max-age=3600').type('svg').send(entryQR.svg));
 function roomCode(){let c;do{c=crypto.randomBytes(3).toString('hex').slice(0,5).toUpperCase()}while(rooms.has(c));return c}
 const token=()=>crypto.randomBytes(24).toString('hex');
 const name=(n,f)=>String(n||'').trim().slice(0,14)||f;
-function state(r){return{code:r.code,round:r.round,count:r.horses.length,distance:CONFIG.distance,homeStraight:CONFIG.homeStraight,status:r.status,startAt:r.startAt,elapsed:r.elapsed,tick:r.tick,serverNow:Date.now(),practice:r.practice,finishOrder:[...r.finishOrder],hostConnected:!!r.hostId,horses:r.horses.map(h=>({slot:h.slot,style:h.style,name:h.name,female:h.female,bride:h.bride,connected:!!h.socketId,claimed:!!h.token,ready:h.ready,active:h.active,progress:h.progress,stamina:h.stamina,reserve:h.reserve,spurt:h.spurt,speed:h.speed,effort:h.effort,acceptedTaps:h.acceptedTaps,lastInputTick:h.lastInputTick,finish:h.finish,conserve:h.conserve}))}}
+function state(r){return{code:r.code,round:r.round,count:r.horses.length,distance:CONFIG.distance,homeStraight:CONFIG.homeStraight,status:r.status,startAt:r.startAt,elapsed:r.elapsed,tick:r.tick,serverNow:Date.now(),practice:r.practice,fixedEntry:entry.status().code===r.code,finishOrder:[...r.finishOrder],hostConnected:!!r.hostId,horses:r.horses.map(h=>({slot:h.slot,style:h.style,name:h.name,female:h.female,bride:h.bride,connected:!!h.socketId,claimed:!!h.token,ready:h.ready,active:h.active,progress:h.progress,stamina:h.stamina,reserve:h.reserve,spurt:h.spurt,speed:h.speed,effort:h.effort,acceptedTaps:h.acceptedTaps,lastInputTick:h.lastInputTick,finish:h.finish,conserve:h.conserve}))}}
 function emit(r){io.to(r.code).emit('state',state(r));r.updatedAt=Date.now()}
 function leave(socket){const d=socket.data||{},r=rooms.get(d.room);if(!r)return;socket.leave(r.code);if(d.role==='host'&&r.hostId===socket.id)r.hostId=null;if(d.role==='player'){const h=r.horses[d.slot];if(h?.socketId===socket.id)h.socketId=null}socket.data={};emit(r)}
 function host(socket){const r=rooms.get(socket.data?.room);return r&&socket.data.role==='host'&&r.hostId===socket.id?r:null}
 function input(h,r,count){if(!h||!h.active||h.finish!=null)return;const n=Math.min(3,Math.max(0,Math.floor(Number(count)||0)));h.tapQueue=Math.min(3,h.tapQueue+n);h.conserve=false;h.lastInputTick=r.tick}
 io.on('connection',socket=>{
+ socket.on('publishEntry',(data={},cb=()=>{})=>{const r=host(socket),previous=entry.status().code,result=entry.publish(r,data||{});if(result.ok){if(previous&&previous!==r.code&&rooms.has(previous))emit(rooms.get(previous));emit(r);}cb(result);});
  socket.on('createRoom',({practice=false}={},cb=()=>{})=>{leave(socket);const r={code:roomCode(),round:1,practice:!!practice,hostId:socket.id,hostToken:token(),createdAt:Date.now(),updatedAt:Date.now(),horses:Array.from({length:CONFIG.horseCount},(_,i)=>makeHorse(i))};resetRace(r);rooms.set(r.code,r);socket.join(r.code);socket.data={room:r.code,role:'host'};cb({ok:true,hostToken:r.hostToken,room:state(r)});emit(r)});
  socket.on('hostJoin',({code,hostToken}={},cb=()=>{})=>{const r=rooms.get(String(code||'').toUpperCase());if(!r)return cb({ok:false,error:'ROOM_NOT_FOUND'});if(hostToken!==r.hostToken)return cb({ok:false,error:'HOST_AUTH'});leave(socket);r.hostId=socket.id;socket.join(r.code);socket.data={room:r.code,role:'host'};cb({ok:true,room:state(r)});emit(r)});
  socket.on('screenJoin',({code}={},cb=()=>{})=>{const r=rooms.get(String(code||'').toUpperCase());if(!r)return cb({ok:false,error:'ROOM_NOT_FOUND'});leave(socket);socket.join(r.code);socket.data={room:r.code,role:'screen'};cb({ok:true,room:state(r)})});
@@ -32,5 +38,5 @@ io.on('connection',socket=>{
  socket.on('disconnect',()=>leave(socket));
 });
 setInterval(()=>{for(const r of rooms.values()){if(r.status==='countdown'&&Date.now()>=r.startAt)r.status='running';if(r.status==='running'){stepRace(r,.05);emit(r)}}},50);
-setInterval(()=>{for(const [c,r]of rooms)if(Date.now()-r.updatedAt>45*60*1000)rooms.delete(c)},60000).unref();
+setInterval(()=>entry.prune(),60000).unref();
 server.listen(PORT,'0.0.0.0',()=>console.log(`Wedding Derby ${VERSION} listening on ${PORT}`));

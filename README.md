@@ -16,13 +16,23 @@ Numbers 1–2 are **先行 / front-runners**; numbers 3–9 are **差し / close
 
 ## Wedding-day flow
 
-1. Open the game on the venue PC and create a room. Use **参加QR** to let the nine riders join on their own phones.
+1. On the venue PC, open the private organizer link supplied with the fixed-QR release. Create a room, then press **本番QRの受付開始**. Distribute the fixed guest QR from `/invite.html` before the event; all nine riders use the same QR and never enter a room code. Keep the organizer link private.
 2. Each rider chooses a number and name, waits for the 3D assets, then presses **準備OK**. The host can start once connected riders are ready. In **全画面**, the host-only panel shows readiness and **発走**; after the race it shows **次のレース**. Both views share the same server readiness checks.
 3. **自動** switches broadcast shots; **自動／中継** tracks the leading horse when the field stretches beyond 42 m and returns to the pack once it closes below 28 m; **追走** follows your horse; **全景** shows the complete oval. The venue PC / practice screen unlocks sound on its first button press. **音 ON／OFF** controls both music and effects and remembers the choice. A directly opened spectator screen uses **音を開始** once. Avoid enabling sound on every rider phone at the venue.
 4. Official results appear after the visible finish. Save the results as an image, replay the whole race, or watch the approach to the finish at 0.5× speed.
 5. **次のレース** keeps riders and names but resets readiness and increments the round. Disconnected seats can be released from the lobby for replacement riders.
 
 Horse-number badges keep stable collision placements, ease movement between positions and use level anchors independent of the gait. Camera cuts and screen resizing reset badge smoothing.
+
+## Fixed guest QR
+
+`/entry.html` is the permanent guest entrance; `/guest-qr.png` and `/guest-qr.svg` encode exactly `https://wedding-derby-live.onrender.com/entry.html`. `/invite.html` offers a print-ready invitation and PNG download. The QR contains no room code or organizer credential. The lightweight entrance polls `/api/entry` every three seconds, shows a waiting/full/racing/reconnection state and forwards to the selected room when intake is open. Returning riders use their existing browser token. The fixed-entry marker survives the game URL update; a deleted room sends an unregistered guest back to the entrance.
+
+Only a current room host with the private organizer capability can publish/close this app's fixed entrance. The capability arrives in a URL fragment, is saved locally on that PC, and is immediately removed from the address bar. Only its SHA-256 verifier is in `entry-config.cjs`; never commit the capability or put it in the guest QR. Changing to a different room requires an explicit confirmation and an exact prior-room match; a countdown/running room cannot be replaced. Creating another room or running practice never changes the published entrance. Closing intake does not disconnect riders or stop the race. The existing room-code and direct-room links still work.
+
+Rooms with a connected host or player no longer expire during a long lobby wait. Fully disconnected rooms expire after 45 minutes of inactivity. Rooms and the current destination remain in memory: after a server restart, guests safely see the same waiting page, and the organizer must create a new room and press **本番QRの受付開始** again. There is no automatic race restoration and no persistent database. The printed QR itself does not need replacement. Do not deploy/restart during the event. A free hosting cold start may delay the first connection; open the venue PC ahead of guests.
+
+`node check-entry.cjs` verifies authorization, explicit room replacement, race protection, connected-room expiry, guest and organizer scripts, HTTP/Socket.IO entry, reconnect, QR PNG, and a complete server restart/republish. `node check-live.cjs` independently verifies the nine-player race. These are virtual-client tests, not a substitute for rehearsal on the actual phones and venue network.
 
 Final positions remain server-authoritative. Run-out animation and ceremony effects never change the winner. There is no finish-order override.
 

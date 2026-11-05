@@ -67,3 +67,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
  body.playing .controls button{height:64px;min-height:64px;font-size:22px}
  body.playing .staminaArea p{display:none}
 }
+
+/* Host-only fixed entry controls; player layout remains unchanged. */
+.organizerNotice{padding:14px 18px;border:1px solid #c8b47b70;border-radius:12px;color:#e6d8ae;font-size:13px;line-height:1.8;background:#1d3325}
+.fixedEntryPanel{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 16px;padding:12px 16px;border:1px solid #a7c39d44;border-radius:12px;background:#142b21}
+.fixedEntryPanel p{font-size:13px;line-height:1.7;margin:0;color:#d9dece}.fixedEntryPanel>div{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.entryPrintLink{color:#e6c482;font-size:12px;white-space:nowrap}.fixedEntryPanel.hidden{display:none}
+@media(max-width:900px){.fixedEntryPanel{align-items:flex-start;flex-direction:column}}
